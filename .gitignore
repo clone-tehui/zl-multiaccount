@@ -1,0 +1,45 @@
+# ── Environment & secrets ──
+.env
+.env.*
+!.env.example
+
+# ── Credentials / tokens / secrets ──
+credentials.json
+credentials.*.json
+
+# ── Runtime state (large / changes frequently) ──
+state.json
+state.json.*
+state.before-*.json
+*.jsonl
+portal.json
+
+# ── SQLite databases ──
+*.db
+*.db-shm
+*.db-wal
+
+# ── Temporary / debug / uploads ──
+tmp-uploads/
+.tmp-*.mjs
+
+# ── Backups (keep out of git) ──
+backups/
+
+# ── Accounts (Zalo login sessions, per-account state) ──
+accounts/
+
+# ── Node ──
+node_modules/
+
+# ── OS / editor ──
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# ── AI knowledge base (regenerable) ──
+ai-knowledge/

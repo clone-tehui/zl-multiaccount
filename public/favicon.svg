@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f2a35"/>
+      <stop offset="55%" stop-color="#0a4f8f"/>
+      <stop offset="100%" stop-color="#173b24"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#22c1ff"/>
+      <stop offset="100%" stop-color="#1565ff"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#c7ff2b"/>
+      <stop offset="100%" stop-color="#49b700"/>
+    </linearGradient>
+    <filter id="glowB" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glowG" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="108" fill="url(#bg)"/>
+  <circle cx="358" cy="124" r="34" fill="#fff16b" opacity="0.92" filter="url(#glowG)"/>
+  <g stroke="#fff16b" stroke-width="8" stroke-linecap="round" opacity="0.9">
+    <line x1="358" y1="66" x2="358" y2="44"/>
+    <line x1="394" y1="78" x2="408" y2="60"/>
+    <line x1="322" y1="78" x2="308" y2="60"/>
+  </g>
+  <path d="M362 166c36-35 70-43 102-43-8 32-23 66-59 101-26 25-53 34-82 34 7-33 17-61 39-92z" fill="url(#green)" stroke="#d3ff7a" stroke-width="4" filter="url(#glowG)"/>
+  <path d="M118 317c39-62 111-92 176-90 53 2 105 19 150 50l-1 1c-22 3-48 19-80 49-39 36-71 56-109 64-48 10-97-3-136-34z" fill="url(#green)" filter="url(#glowG)" opacity="0.97"/>
+  <path d="M152 286c80-27 165-16 252 31l24-55 59 11-29 132-111-10 42-54c-77-46-156-62-237-55z" fill="url(#blue)" filter="url(#glowB)"/>
+  <path d="M234 286c6-25 21-44 39-61 20-18 40-34 51-57 17 12 28 33 28 58 0 25-12 49-33 69-21 20-33 38-39 63-38-18-58-41-46-72z" fill="#0a4ea2" opacity="0.88"/>
+</svg>

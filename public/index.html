@@ -1,0 +1,760 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zalo User Server</title>
+    <meta name="theme-color" content="#0b363b" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=20260518zg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png?v=20260518zg" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png?v=20260518zg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/apple-touch-icon.png?v=20260518zg" />
+    <link rel="manifest" href="/site.webmanifest?v=20260518zg" />
+    <link rel="stylesheet" href="/styles.css?v=20260528-agent-ui15" />
+  </head>
+  <body>
+    <div id="auth-overlay" class="auth-overlay hidden">
+      <form id="login-form" class="auth-card">
+        <h2>Đăng nhập</h2>
+        <label>
+          <span>Tài khoản</span>
+          <input id="login-username" autocomplete="username" placeholder="Tên đăng nhập" />
+        </label>
+        <label>
+          <span>Mật khẩu</span>
+          <input id="login-password" type="password" autocomplete="current-password" placeholder="Mật khẩu" />
+        </label>
+        <p id="login-error" class="auth-error hidden"></p>
+        <button class="primary-btn" type="submit">Đăng nhập</button>
+      </form>
+    </div>
+
+    <div id="app-notice" class="app-notice hidden">
+      <div class="app-notice__text" id="app-notice-text"></div>
+      <button id="btn-app-reload" class="primary-btn" type="button">Tải lại trang</button>
+    </div>
+
+    <div class="app-shell hidden" id="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div class="brand-row">
+            <div>
+              <h1>Zalo User Server</h1>
+              <p id="account-line" class="muted">Chưa có tài khoản kết nối</p>
+            </div>
+            <span id="session-badge" class="badge badge-offline">Offline</span>
+          </div>
+
+          <div class="sidebar-tabs">
+            <button id="btn-view-chats" class="tab-btn active" type="button">Chat</button>
+            <button id="btn-view-utility" class="tab-btn" type="button">Tiện ích</button>
+            <button id="btn-theme-toggle" class="ghost-btn" type="button" title="Đổi giao diện">🌙</button>
+            <button id="btn-logout" class="ghost-btn hidden" type="button">Đăng xuất</button>
+          </div>
+
+          <input id="thread-search" class="search-input compact" placeholder="Tìm hội thoại, tên, SĐT, bạn bè, người lạ..." />
+          <div class="sidebar-summary">
+            <span id="thread-count" class="muted">0</span>
+            <span id="unread-summary" class="muted">0 chưa đọc</span>
+          </div>
+          <div class="account-switcher">
+            <label class="compact-label account-switcher__field">
+              <span>Account</span>
+              <select id="account-select" class="search-input compact no-top"></select>
+            </label>
+            <button id="btn-zalo-account-logout" class="ghost-btn danger-ghost" type="button">Đăng xuất account</button>
+          </div>
+        </div>
+
+        <div id="thread-list" class="thread-list sidebar-scroll"></div>
+      </aside>
+
+      <div id="layout-resizer" class="layout-resizer" aria-hidden="true"></div>
+
+      <main class="main-panel">
+        <section id="chat-view" class="view-panel active">
+          <header class="chat-header compact-header">
+            <div id="chat-header-trigger" class="chat-title-wrap chat-title-trigger" role="button" tabindex="0" title="Xem thông tin hội thoại">
+              <div id="chat-avatar-wrap"><div id="chat-avatar" class="avatar large">?</div></div>
+              <div class="chat-title-meta">
+                <h2 id="chat-title">Chọn hội thoại</h2>
+                <p id="chat-subtitle" class="muted">Realtime nội bộ server</p>
+                <div id="chat-relation-row" class="chat-relation-row"></div>
+                <div id="chat-booking-row" class="chat-booking-row hidden"></div>
+              </div>
+            </div>
+            <div class="chat-actions">
+              <div id="chat-direct-actions" class="chat-direct-actions"></div>
+              <div id="chat-ai-quickbar" class="chat-ai-quickbar">
+                <button id="btn-chat-ai-toggle" class="ghost-btn chat-ai-toggle" type="button">AI: Tắt</button>
+                <div id="chat-ai-snooze-wrap" class="chat-ai-snooze-wrap">
+                  <button id="btn-chat-ai-snooze" class="ghost-btn chat-ai-quick" type="button">30p</button>
+                  <div id="chat-ai-snooze-menu" class="chat-ai-snooze-menu hidden">
+                    <button class="chat-ai-snooze-option" type="button" data-minutes="5">5p</button>
+                    <button class="chat-ai-snooze-option" type="button" data-minutes="10">10p</button>
+                    <button class="chat-ai-snooze-option" type="button" data-minutes="30">30p</button>
+                    <button class="chat-ai-snooze-option" type="button" data-minutes="60">1h</button>
+                    <button class="chat-ai-snooze-option" type="button" data-minutes="180">3h</button>
+                  </div>
+                </div>
+                <button id="btn-chat-ai-human" class="ghost-btn chat-ai-quick" type="button">Người xử lý</button>
+              </div>
+              <button id="btn-thread-meta" class="ghost-btn" type="button">Thông tin</button>
+              <button id="btn-sync" class="secondary-btn" type="button">Đồng bộ lại</button>
+            </div>
+          </header>
+
+          <section id="message-list" class="message-list empty-state">
+            Chưa chọn hội thoại nào.
+          </section>
+
+          <section id="thread-details" class="thread-details compact-details hidden popup-card">
+            <div class="details-grid">
+              <label>
+                <span>Tên hiển thị</span>
+                <input id="rename-input" placeholder="Đổi tên nhóm / biệt danh người dùng" />
+              </label>
+              <label>
+                <span>Phụ trách</span>
+                <input id="assignee-input" placeholder="VD: Lan / CSKH 1" />
+              </label>
+              <label>
+                <span>Tags Zalo</span>
+                <input id="tags-input" placeholder="khách mới, bảo hành, VIP" />
+              </label>
+              <label>
+                <span>Tự xoá tin nhắn</span>
+                <select id="auto-delete-select">
+                  <option value="0">Tắt</option>
+                  <option value="86400000">1 ngày</option>
+                  <option value="604800000">7 ngày</option>
+                  <option value="1209600000">14 ngày</option>
+                </select>
+              </label>
+            </div>
+            <section id="thread-automation-panel" class="thread-automation-panel top-gap-sm">
+              <div class="thread-automation-card">
+                <div class="panel-title-row">
+                  <div>
+                    <h3>AI cho khách này</h3>
+                    <p id="thread-automation-hint" class="muted small-note">Chọn nhanh trạng thái xử lý cho thread hiện tại.</p>
+                  </div>
+                  <span id="thread-automation-status" class="mini-chip">Chưa bật</span>
+                </div>
+                <div class="thread-automation-quick-actions top-gap-sm">
+                  <button id="btn-thread-automation-off" class="ghost-btn" type="button">Tắt</button>
+                  <button id="btn-thread-automation-auto" class="secondary-btn" type="button">Bật auto</button>
+                  <button id="btn-thread-automation-5m" class="ghost-btn" type="button">Tạm 5 phút</button>
+                  <button id="btn-thread-automation-30m" class="ghost-btn" type="button">Tạm 30 phút</button>
+                  <button id="btn-thread-automation-human" class="ghost-btn" type="button">Chuyển người xử lý</button>
+                  <button id="btn-thread-automation-save" class="primary-btn" type="button">Lưu</button>
+                </div>
+                <details id="thread-automation-details" class="ai-subdetails top-gap-sm">
+                  <summary>Bật / mở lại theo lịch cho thread này</summary>
+                  <div class="ai-subdetails-body">
+                    <div class="details-grid compact-grid top-gap-sm">
+                      <label>
+                        <span>Chế độ</span>
+                        <select id="thread-automation-mode">
+                          <option value="off">Tắt</option>
+                          <option value="auto">Bật auto</option>
+                          <option value="snoozed">Mở lại sau</option>
+                          <option value="human_only">Chỉ người xử lý</option>
+                          <option value="paused_by_escalation">Dừng do escalation</option>
+                        </select>
+                      </label>
+                      <label>
+                        <span>Mở lại sau (giờ)</span>
+                        <input id="thread-automation-hours" type="number" min="0" step="1" placeholder="0 / 1 / 2" />
+                      </label>
+                      <label>
+                        <span>Mở lại sau (phút)</span>
+                        <input id="thread-automation-minutes" type="number" min="0" step="1" placeholder="5 / 10 / 30 / 60" />
+                      </label>
+                      <label>
+                        <span>Mở lại lúc</span>
+                        <input id="thread-automation-resume-preview" type="text" placeholder="Chưa đặt lịch" readonly />
+                      </label>
+                      <label>
+                        <span>Flow đang gán</span>
+                        <input id="thread-automation-flow-id" placeholder="booking_discovery" />
+                      </label>
+                      <label>
+                        <span>Policy / rule set</span>
+                        <input id="thread-automation-policy-id" placeholder="complaint_handoff" />
+                      </label>
+                    </div>
+                    <label class="top-gap-sm">
+                      <span>Lý do / ghi chú</span>
+                      <input id="thread-automation-reason" placeholder="VD: khách complaint nên chuyển người thật" />
+                    </label>
+                  </div>
+                </details>
+              </div>
+            </section>
+            <section id="thread-memory-panel" class="thread-memory-panel top-gap-sm">
+              <div class="thread-automation-card">
+                <div class="panel-title-row">
+                  <div>
+                    <h3>Memory AI</h3>
+                    <p id="thread-memory-hint" class="muted small-note">Xem và xoá bộ nhớ AI riêng của hội thoại này.</p>
+                  </div>
+                  <span id="thread-memory-count" class="mini-chip">0 mục</span>
+                </div>
+                <div class="thread-memory-actions top-gap-sm">
+                  <button id="btn-thread-memory-refresh" class="ghost-btn" type="button">Tải memory</button>
+                  <button id="btn-thread-memory-delete" class="ghost-btn danger-btn" type="button" disabled>Xoá mục đã chọn</button>
+                </div>
+                <div id="thread-memory-table" class="thread-memory-table top-gap-sm">Chưa tải memory.</div>
+              </div>
+            </section>
+            <div id="available-tags" class="tag-picker"></div>
+            <label id="notes-field-wrap">
+              <span>Ghi chú nội bộ</span>
+              <textarea id="notes-input" rows="2" placeholder="Ghi chú nội bộ"></textarea>
+            </label>
+            <div class="row-gap end-row">
+              <button id="btn-close-thread-meta" class="ghost-btn" type="button">Đóng</button>
+              <button id="btn-save-meta" class="secondary-btn" type="button">Lưu metadata</button>
+            </div>
+          </section>
+
+          <footer class="composer">
+            <div id="reply-preview" class="reply-preview hidden"></div>
+            <div id="quick-messages" class="quick-messages"></div>
+            <div class="composer-tools">
+              <button id="btn-booking-bridge" class="ghost-btn hidden" type="button">🏨 Đặt phòng</button>
+              <button id="btn-attach" class="ghost-btn" type="button">📎 Tệp/ảnh</button>
+              <button id="btn-emoji" class="ghost-btn" type="button">😊 Emoji</button>
+              <button id="btn-sticker" class="ghost-btn" type="button">🧸 Sticker</button>
+              <input id="file-input" type="file" multiple hidden />
+            </div>
+            <div id="composer-tray" class="composer-tray hidden">
+              <div id="attachment-preview" class="attachment-preview hidden"></div>
+              <div id="emoji-panel" class="picker-panel hidden"></div>
+              <div id="sticker-panel" class="picker-panel hidden sticker-panel">
+                <div class="sticker-panel-head">
+                  <div class="sticker-panel-title">Sticker Zalo</div>
+                  <div id="sticker-pack-count" class="muted small-note"></div>
+                </div>
+                <div id="sticker-pack-list" class="sticker-pack-list"></div>
+                <div id="sticker-grid" class="sticker-grid muted">Đang tải sticker...</div>
+              </div>
+            </div>
+            <textarea id="message-input" placeholder="Nhập tin nhắn..." rows="2"></textarea>
+            <button id="btn-send" class="primary-btn" type="button">Gửi</button>
+          </footer>
+        </section>
+
+        <section id="utility-view" class="view-panel utility-view">
+          <div class="utility-columns">
+            <section class="panel utility-panel">
+              <div class="panel-title-row">
+                <h2>Phiên đăng nhập</h2>
+                <button id="btn-refresh" class="ghost-btn" type="button">Làm mới</button>
+              </div>
+              <p id="sync-note" class="muted small-note"></p>
+              <div id="qr-box" class="qr-box">Chưa có QR</div>
+              <div class="row-gap">
+                <button id="btn-start-qr" class="primary-btn" type="button">Thêm account bằng QR</button>
+                <button id="btn-confirm-qr" class="secondary-btn" type="button">Giả lập đã quét</button>
+              </div>
+            </section>
+
+            <section class="panel utility-panel">
+              <div class="panel-title-row">
+                <h2>Tìm bạn bè / kết bạn</h2>
+              </div>
+              <div class="friend-search-row compact-search-row">
+                <input id="friend-search-input" class="search-input compact no-top" placeholder="Username / số điện thoại" />
+                <button id="btn-friend-search" class="secondary-btn" type="button">Tìm</button>
+              </div>
+              <div id="friend-search-results" class="friend-results muted">Chưa tìm kiếm.</div>
+            </section>
+          </div>
+
+          <div class="utility-columns lower-columns">
+            <section class="panel utility-panel">
+              <div class="panel-title-row">
+                <h2>Lời mời nhận được</h2>
+              </div>
+              <div id="incoming-requests" class="friend-results muted">Đang tải...</div>
+            </section>
+
+            <section class="panel utility-panel">
+              <div class="panel-title-row">
+                <h2>Gợi ý kết bạn</h2>
+              </div>
+              <div id="recommendations" class="friend-results muted">Đang tải...</div>
+            </section>
+          </div>
+
+          <div class="utility-columns lower-columns">
+            <section class="panel utility-panel">
+              <div class="panel-title-row">
+                <h2>Đã gửi lời mời</h2>
+              </div>
+              <div id="sent-requests" class="friend-results muted">Đang tải...</div>
+            </section>
+
+            <section class="panel utility-panel">
+              <div class="panel-title-row">
+                <h2>Đã chặn</h2>
+              </div>
+              <div id="blocked-users" class="friend-results muted">Đang tải...</div>
+            </section>
+          </div>
+
+          <section class="panel utility-panel full-width-panel">
+            <div class="panel-title-row">
+              <h2>Danh sách bạn bè</h2>
+            </div>
+            <div id="friend-list" class="friend-results muted">Đang tải...</div>
+          </section>
+
+
+          <section id="utility-webhook-panel" class="panel utility-panel full-width-panel">
+            <div class="panel-title-row">
+              <h2>Tích hợp n8n / codedao12</h2>
+              <a class="ghost-btn" href="/api/docs/compat" target="_blank" rel="noreferrer">API docs</a>
+            </div>
+            <div class="details-grid">
+              <label>
+                <span>Webhook URL</span>
+                <input id="webhook-url-input" placeholder="https://n8n.../webhook/..." />
+              </label>
+              <label>
+                <span>Secret header</span>
+                <input id="webhook-secret-input" placeholder="x-bot-api-secret-token" />
+              </label>
+            </div>
+            <label class="checkbox-row">
+              <input id="webhook-enabled-input" type="checkbox" />
+              <span>Bật đẩy sự kiện sang n8n</span>
+            </label>
+            <div>
+              <span>Acc Zalo được phép gửi webhook</span>
+              <div id="webhook-account-picker" class="rbac-account-picker muted">Đang tải account Zalo đang login...</div>
+              <input id="webhook-account-ids" type="hidden" />
+              <small class="muted">Chỉ admin thấy mục này. Chỉ acc được tick mới gửi webhook sang n8n.</small>
+            </div>
+            <p id="webhook-status" class="muted small-note"></p>
+            <div class="row-gap end-row">
+              <button id="btn-save-webhook" class="secondary-btn" type="button">Lưu webhook</button>
+            </div>
+          </section>
+          <section id="utility-rbac-panel" class="panel utility-panel full-width-panel">
+            <div class="panel-title-row">
+              <h2>Phân quyền nội bộ</h2>
+            </div>
+            <div id="rbac-panel" class="friend-results muted">Đang tải cấu hình phân quyền...</div>
+            <section class="rbac-block top-gap-sm">
+              <div class="panel-title-row">
+                <h3>Bảng quản lí các bộ phận</h3>
+              </div>
+              <div id="rbac-departments-board" class="rbac-board muted">Đang tải bộ phận...</div>
+            </section>
+            <section class="rbac-block top-gap-sm">
+              <div class="panel-title-row">
+                <h3>Gán account Zalo vào bộ phận</h3>
+              </div>
+              <div class="details-grid">
+                <label>
+                  <span>Bộ phận nhận account</span>
+                  <select id="rbac-account-department-id">
+                    <option value="">Chọn bộ phận</option>
+                  </select>
+                </label>
+                <div>
+                  <span>Account Zalo đã quét trên server</span>
+                  <div id="rbac-department-account-picker" class="rbac-account-picker muted">Chọn bộ phận để hiện account.</div>
+                  <small class="muted">Mỗi account Zalo chỉ trực thuộc 1 bộ phận tại một thời điểm.</small>
+                </div>
+              </div>
+              <div class="row-gap end-row top-gap-sm">
+                <button id="btn-rbac-save-department-accounts" class="secondary-btn" type="button">Lưu account cho bộ phận này</button>
+              </div>
+            </section>
+            <section class="rbac-block top-gap-sm">
+              <div class="panel-title-row">
+                <h3>Ma trận quyền theo vai trò</h3>
+              </div>
+              <div id="rbac-role-matrix" class="rbac-matrix muted">Đang tải quyền...</div>
+              <div class="row-gap end-row top-gap-sm">
+                <button id="btn-rbac-apply-roles" class="primary-btn" type="button">Áp dụng quyền ngay</button>
+              </div>
+            </section>
+            <div class="details-grid top-gap-sm">
+              <label>
+                <span>Bộ phận</span>
+                <input id="rbac-department-code" placeholder="sale" />
+              </label>
+              <label>
+                <span>Tên bộ phận</span>
+                <input id="rbac-department-name" placeholder="Sales" />
+              </label>
+              <label>
+                <span>Manager usernames</span>
+                <input id="rbac-department-managers" placeholder="manager1,manager2" />
+              </label>
+            </div>
+            <div class="row-gap end-row">
+              <button id="btn-rbac-save-department" class="secondary-btn" type="button">Lưu bộ phận</button>
+            </div>
+            <section class="rbac-block top-gap-sm">
+              <div class="panel-title-row">
+                <h3>Danh sách account nội bộ</h3>
+              </div>
+              <div id="rbac-users-board" class="rbac-board muted">Đang tải account...</div>
+            </section>
+            <div class="details-grid top-gap-sm">
+              <label>
+                <span>Username</span>
+                <input id="rbac-user-username" placeholder="nhanvien1" />
+              </label>
+              <label>
+                <span>Tên hiển thị</span>
+                <input id="rbac-user-display" placeholder="Nhân viên 1" />
+              </label>
+              <label>
+                <span>Mật khẩu</span>
+                <div class="password-field">
+                  <input id="rbac-user-password" type="password" placeholder="Đặt mật khẩu đăng nhập" />
+                  <button id="btn-rbac-toggle-password" class="ghost-btn password-toggle" type="button" aria-label="Hiện mật khẩu" title="Hiện mật khẩu">👁</button>
+                </div>
+              </label>
+              <label>
+                <span>Vai trò</span>
+                <select id="rbac-user-role">
+                  <option value="staff">staff</option>
+                  <option value="manager">manager</option>
+                </select>
+              </label>
+              <label>
+                <span>Bộ phận</span>
+                <div id="rbac-user-department-picker" class="rbac-account-picker muted">Đang tải bộ phận...</div>
+                <input id="rbac-user-departments" type="hidden" />
+                <small class="muted">Manager có thể chọn nhiều bộ phận. Staff chỉ nên chọn 1 bộ phận.</small>
+              </label>
+              <div>
+                <span>Được vào các account Zalo</span>
+                <div id="rbac-user-account-picker" class="rbac-account-picker muted">Đang tải account Zalo đang login...</div>
+                <input id="rbac-user-account-ids" type="hidden" />
+                <small class="muted">Chỉ hiện account thuộc đúng bộ phận đã chọn ở trên.</small>
+              </div>
+            </div>
+            <div class="row-gap end-row">
+              <button id="btn-rbac-save-user" class="secondary-btn" type="button">Lưu user</button>
+            </div>
+          </section>
+          <section id="utility-ai-panel" class="panel utility-panel full-width-panel ai-admin-panel">
+            <div class="panel-title-row">
+              <div>
+                <h2>AI automation / chatbot control</h2>
+                <p class="muted small-note">Thiết kế lại để admin nhìn nhanh, chỉnh nhanh, và vẫn mở sâu khi cần.</p>
+              </div>
+              <div class="row-gap">
+                <label class="inline-field">
+                  <span>Bộ phận đang chỉnh</span>
+                  <select id="ai-department-select"></select>
+                </label>
+                <span id="ai-department-hint" class="muted small-note">Mỗi bộ phận có workflow và knowledge riêng.</span>
+              </div>
+              <div class="row-gap">
+                <button id="btn-ai-plan-preview" class="ghost-btn" type="button">Preview thread đang mở</button>
+                <button id="btn-ai-save-config" class="primary-btn" type="button">Lưu AI automation</button>
+              </div>
+            </div>
+
+            <div class="ai-overview-layout top-gap-sm">
+              <div class="ai-overview-main">
+                <div id="ai-automation-summary" class="ai-summary-grid">Đang tải...</div>
+                <div id="ai-routing-board" class="ai-overview-card top-gap-sm">Đang tải sơ đồ routing...</div>
+              </div>
+              <aside id="ai-execution-board" class="ai-overview-card ai-overview-side">Đang tải checklist...</aside>
+            </div>
+
+            <details class="ai-accordion" open>
+              <summary>Tổng quan & điều khiển nhanh</summary>
+              <div class="ai-accordion-body">
+                <div class="details-grid top-gap-sm">
+                  <label>
+                    <span>Trạng thái toàn cục</span>
+                    <select id="ai-enabled-mode">
+                      <option value="disabled">Tắt toàn bộ</option>
+                      <option value="assistive">Assistive / gợi ý</option>
+                      <option value="autonomous">Autonomous / tự trả lời</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Mặc định thread mới</span>
+                    <select id="ai-default-thread-mode">
+                      <option value="off">Tắt</option>
+                      <option value="auto">Bật auto</option>
+                      <option value="human_only">Chỉ người</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Provider chính</span>
+                    <input id="ai-provider-primary" placeholder="openrouter / openai / google" />
+                  </label>
+                  <label>
+                    <span>Provider fallback</span>
+                    <input id="ai-provider-fallback" placeholder="openrouter" />
+                  </label>
+                  <label>
+                    <span>Admin alert usernames</span>
+                    <input id="ai-admin-alert-users" placeholder="admin1,admin2" />
+                  </label>
+                  <label>
+                    <span>Bộ phận được phép</span>
+                    <input id="ai-allowed-departments" placeholder="chihome,sale,cskh" />
+                  </label>
+                  <label class="full-span">
+                    <span>Account Zalo được phép dùng AI cho bộ phận này</span>
+                    <input id="ai-selected-account-ids" class="mono-input" placeholder="Chọn bên dưới hoặc nhập accountId, cách nhau bằng dấu phẩy" />
+                  </label>
+                  <div id="ai-account-picker" class="account-picker-grid full-span">Đang tải account Zalo...</div>
+                </div>
+              </div>
+            </details>
+
+            <details class="ai-accordion" open>
+              <summary>Hệ multi-agent / Agent System DB</summary>
+              <div class="ai-accordion-body">
+                <div class="details-grid top-gap-sm">
+                  <label>
+                    <span>Max auto turns</span>
+                    <input id="ai-max-auto-turns" type="number" min="1" step="1" />
+                  </label>
+                  <label>
+                    <span>Max tool calls / turn</span>
+                    <input id="ai-max-tool-calls" type="number" min="1" step="1" />
+                  </label>
+                  <label>
+                    <span>Low confidence threshold</span>
+                    <input id="ai-low-confidence-threshold" type="number" min="0" max="1" step="0.01" />
+                  </label>
+                  <label>
+                    <span>Complex intent threshold</span>
+                    <input id="ai-complex-threshold" type="number" min="0" max="1" step="0.01" />
+                  </label>
+                  <label>
+                    <span>Repeat question threshold</span>
+                    <input id="ai-repeat-threshold" type="number" min="1" step="1" />
+                  </label>
+                  <label>
+                    <span>Snooze presets (phút)</span>
+                    <input id="ai-snooze-presets" placeholder="5,10,20,30,60" />
+                  </label>
+                </div>
+                <section class="ai-agent-system-panel top-gap-sm">
+                  <div class="panel-title-row">
+                    <div>
+                      <strong>Agent System DB — prompt từng agent</strong>
+                      <div class="muted small-note">Agent chính là <b>orchestrator</b>. Card này được pin lên đầu; các card còn lại là agent phụ xử lý booking, live data, composer, policy...</div>
+                    </div>
+                    <button id="btn-ai-agent-system-refresh" class="ghost-btn" type="button">Tải lại agents</button>
+                  </div>
+                  <div class="row-gap top-gap-sm">
+                    <a class="secondary-btn" href="/execution-view.html" target="_blank" rel="noopener">Mở Execution Graph</a>
+                    <span class="muted small-note">Muốn xem luồng n8n-style thì mở bằng execution_id từ trace.</span>
+                  </div>
+                  <div id="ai-agent-system-db-board" class="friend-results top-gap-sm">Đang tải Agent System DB...</div>
+                </section>
+              </div>
+            </details>
+
+            <details class="ai-accordion" open>
+              <summary>Knowledge / RAG / Vector DB</summary>
+              <div class="ai-accordion-body">
+                <div class="details-grid top-gap-sm">
+                  <label>
+                    <span>Nạp tài liệu vào</span>
+                    <select id="ai-knowledge-upload-target">
+                      <option value="rag">RAG / knowledge chunks</option>
+                      <option value="vector">Vector DB queue</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>Tag tài liệu</span>
+                    <input id="ai-knowledge-upload-tags" placeholder="policy, giá, faq, chihome" />
+                  </label>
+                </div>
+                <div class="row-gap top-gap-sm">
+                  <button id="btn-ai-knowledge-upload" class="secondary-btn" type="button">Thêm tài liệu cho AI</button>
+                  <button id="btn-ai-knowledge-refresh" class="ghost-btn" type="button">Tải lại danh sách</button>
+                  <input id="ai-knowledge-file-input" type="file" multiple hidden accept=".txt,.md,.csv,.json,.xlsx,.xls,.xlsm" />
+                </div>
+                <div class="muted small-note top-gap-sm">Hỗ trợ trước mắt: txt, md, csv, json, xlsx/xls. File được parse sơ bộ và lưu metadata để dùng cho RAG / vector pipeline.</div>
+                <div id="ai-knowledge-library" class="friend-results top-gap-sm">Chưa có tài liệu.</div>
+                <details class="ai-subdetails top-gap-sm">
+                  <summary>JSON nâng cao cho knowledge / vector</summary>
+                  <div class="ai-subdetails-body">
+                    <label class="top-gap-sm">
+                      <span>Knowledge sources (JSON mở)</span>
+                      <textarea id="ai-knowledge-sources" rows="7" class="mono-input" placeholder='[{"id":"chihomehotel_availability","type":"api"}]'></textarea>
+                    </label>
+                    <label class="top-gap-sm">
+                      <span>Vector stores (JSON mở)</span>
+                      <textarea id="ai-vector-stores" rows="7" class="mono-input" placeholder='[{"id":"default_rag_store","backend":"pgvector","dimensions":1536}]'></textarea>
+                    </label>
+                    <label class="top-gap-sm">
+                      <span>Embedding catalog (JSON mở)</span>
+                      <textarea id="ai-embedding-catalog" rows="7" class="mono-input" placeholder='[{"id":"openai_text_embedding_3_small","dimensions":1536}]'></textarea>
+                    </label>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="ai-accordion">
+              <summary>Model routing & bảng gợi ý model</summary>
+              <div class="ai-accordion-body">
+                <div class="details-grid top-gap-sm">
+                  <label>
+                    <span>Model classify</span>
+                    <select id="ai-model-classify"><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select>
+                  </label>
+                  <label>
+                    <span>Model retrieve</span>
+                    <select id="ai-model-retrieve"><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select>
+                  </label>
+                  <label>
+                    <span>Model compose simple</span>
+                    <select id="ai-model-compose-simple"><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select>
+                  </label>
+                  <label>
+                    <span>Model compose structured</span>
+                    <select id="ai-model-compose-structured"><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select>
+                  </label>
+                  <label>
+                    <span>Model complaint</span>
+                    <select id="ai-model-complaint"><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select>
+                  </label>
+                  <label>
+                    <span>Model fallback</span>
+                    <select id="ai-model-fallback"><option value="small">small</option><option value="medium">medium</option><option value="large">large</option></select>
+                  </label>
+                </div>
+                <div id="ai-model-catalog-board" class="friend-results top-gap-sm">Đang tải model catalog...</div>
+                <details class="ai-subdetails top-gap-sm">
+                  <summary>JSON nâng cao cho model catalog</summary>
+                  <div class="ai-subdetails-body">
+                    <label class="top-gap-sm">
+                      <span>Model catalog (JSON mở)</span>
+                      <textarea id="ai-model-catalog" rows="7" class="mono-input" placeholder='[{"id":"router_small_placeholder","provider":"openrouter"}]'></textarea>
+                    </label>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="ai-accordion">
+              <summary>Prompts, flows, escalation, rules</summary>
+              <div class="ai-accordion-body">
+                <label class="top-gap-sm">
+                  <span>Complaint / escalation keywords</span>
+                  <textarea id="ai-complaint-keywords" rows="3" placeholder="mỗi dòng hoặc cách nhau bởi dấu phẩy"></textarea>
+                </label>
+                <label class="top-gap-sm">
+                  <span>System prompt</span>
+                  <textarea id="ai-system-prompt" rows="4" placeholder="Nguyên tắc lõi của chatbot / orchestrator"></textarea>
+                </label>
+                <label class="top-gap-sm">
+                  <span>Reply style prompt</span>
+                  <textarea id="ai-reply-style-prompt" rows="3" placeholder="Giọng điệu trả lời khách"></textarea>
+                </label>
+                <label class="top-gap-sm">
+                  <span>Human handoff prompt</span>
+                  <textarea id="ai-human-handoff-prompt" rows="3" placeholder="Cách ghi chú khi chuyển người xử lý"></textarea>
+                </label>
+                <details class="ai-subdetails top-gap-sm" open>
+                  <summary>Flows, prompts, rules nâng cao</summary>
+                  <div class="ai-subdetails-body">
+                    <label class="top-gap-sm">
+                      <span>Flow definitions (JSON mở)</span>
+                      <textarea id="ai-flow-definitions" rows="8" class="mono-input" placeholder='[{"id":"booking_discovery","steps":[...]}]'></textarea>
+                    </label>
+                    <label class="top-gap-sm">
+                      <span>Prompt library (JSON mở)</span>
+                      <textarea id="ai-prompt-library" rows="8" class="mono-input" placeholder='[{"id":"availability_compose","prompt":"..."}]'></textarea>
+                    </label>
+                    <label class="top-gap-sm">
+                      <span>Automation rules (JSON mở)</span>
+                      <textarea id="ai-automation-rules" rows="8" class="mono-input" placeholder='[{"id":"complaint_auto_pause","when":{...}}]'></textarea>
+                    </label>
+                  </div>
+                </details>
+              </div>
+            </details>
+
+            <details class="ai-accordion">
+              <summary>Preview / debug</summary>
+              <div class="ai-accordion-body">
+                <div id="ai-plan-preview-output" class="friend-results muted top-gap-sm">Chưa chạy preview.</div>
+              </div>
+            </details>
+          </section>
+          <section class="panel utility-panel full-width-panel">
+            <div class="panel-title-row">
+              <h2>Auto reply native của Zalo / dữ liệu phụ</h2>
+            </div>
+            <div id="auto-replies" class="friend-results muted">Đang tải...</div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div id="context-menu" class="context-menu hidden"></div>
+    <div id="event-toast-stack" class="event-toast-stack"></div>
+
+    <div id="thread-profile-modal" class="thread-profile-modal hidden" role="dialog" aria-modal="true" aria-label="Thông tin hội thoại">
+      <div class="thread-profile-card">
+        <button id="thread-profile-close" class="thread-profile-close" type="button" aria-label="Đóng">×</button>
+        <div id="thread-profile-content" class="thread-profile-content"></div>
+      </div>
+    </div>
+
+    <div id="forward-modal" class="thread-profile-modal hidden" role="dialog" aria-modal="true" aria-label="Chuyển tiếp tin nhắn">
+      <div class="thread-profile-card forward-card">
+        <button id="forward-modal-close" class="thread-profile-close" type="button" aria-label="Đóng">×</button>
+        <div class="forward-modal-content">
+          <div class="panel-title-row">
+            <h2>Chuyển tiếp tin nhắn</h2>
+          </div>
+          <input id="forward-search" class="search-input compact" placeholder="Tìm hội thoại theo tên..." />
+          <div id="forward-thread-list" class="forward-thread-list"></div>
+          <div class="forward-footer">
+            <div id="forward-status" class="muted small-note">Chọn một hội thoại để chuyển tiếp.</div>
+            <div class="row-gap end-row">
+              <button id="forward-send" class="primary-btn" type="button" disabled>Gửi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="booking-bridge-modal" class="thread-profile-modal hidden" role="dialog" aria-modal="true" aria-label="Đặt phòng ChiHome">
+      <div class="thread-profile-card booking-bridge-card">
+        <button id="booking-bridge-close" class="thread-profile-close" type="button" aria-label="Đóng">×</button>
+        <div class="booking-bridge-head">
+          <div>
+            <h2>Đặt phòng ChiHome</h2>
+            <div id="booking-bridge-status" class="muted small-note">Đang chuẩn bị form đặt phòng...</div>
+          </div>
+        </div>
+        <iframe id="booking-bridge-frame" class="booking-bridge-frame" title="Đặt phòng ChiHome" loading="lazy"></iframe>
+      </div>
+    </div>
+
+    <div id="image-lightbox" class="image-lightbox hidden" role="dialog" aria-modal="true" aria-label="Xem ảnh">
+      <button id="image-lightbox-close" class="image-lightbox-close" type="button" aria-label="Đóng">×</button>
+      <button id="image-lightbox-prev" class="image-lightbox-nav prev" type="button" aria-label="Ảnh trước">‹</button>
+      <img id="image-lightbox-img" class="image-lightbox-img" alt="Xem ảnh" />
+      <button id="image-lightbox-next" class="image-lightbox-nav next" type="button" aria-label="Ảnh sau">›</button>
+    </div>
+
+    <script type="module" src="/app.js?v=20260528-agent-ui15"></script>
+  </body>
+</html>
