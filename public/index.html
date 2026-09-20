@@ -48,7 +48,16 @@
           <div class="sidebar-tabs">
             <button id="btn-view-chats" class="tab-btn active" type="button">Chat</button>
             <button id="btn-view-utility" class="tab-btn" type="button">Tiện ích</button>
-            <button id="btn-theme-toggle" class="ghost-btn" type="button" title="Đổi giao diện">🌙</button>
+            <div class="theme-switch-wrap">
+              <select id="theme-select" class="theme-select" aria-label="Chọn giao diện" title="Chọn giao diện">
+                <option value="default">Mặc định</option>
+                <option value="light">Sáng</option>
+                <option value="dark">Tối</option>
+                <option value="glass">Liquid Glass</option>
+                <option value="origin">Origin Gallery</option>
+              </select>
+              <button id="btn-theme-toggle" class="ghost-btn icon-btn" type="button" title="Đổi giao diện" aria-label="Chuyển đổi giao diện sáng tối">🌙</button>
+            </div>
             <button id="btn-logout" class="ghost-btn hidden" type="button">Đăng xuất</button>
           </div>
 

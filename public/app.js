@@ -79,6 +79,7 @@ const els = {
   loginError: document.getElementById('login-error'),
   btnLogout: document.getElementById('btn-logout'),
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
+  themeSelect: document.getElementById('theme-select'),
   btnViewChats: document.getElementById('btn-view-chats'),
   btnViewUtility: document.getElementById('btn-view-utility'),
   chatView: document.getElementById('chat-view'),
@@ -346,17 +347,77 @@ function detectClientVersion() {
   }
 }
 
+const SUPPORTED_THEMES = ['default', 'light', 'dark', 'glass', 'origin'];
+
+function getStoredTheme() {
+  try {
+    const raw = localStorage.getItem('zalo-ui-theme') || localStorage.getItem('theme') || '';
+    if (raw === 'light') return 'light';
+    if (raw === 'dark') return 'dark';
+    if (raw === 'glass' || raw === 'liquid-glass') return 'glass';
+    if (raw === 'origin' || raw === 'origin-gallery') return 'origin';
+    if (raw === 'default') return 'default';
+    if (raw) {
+      const lower = String(raw).toLowerCase().trim();
+      if (SUPPORTED_THEMES.includes(lower)) return lower;
+    }
+  } catch {
+    // Safe fallback if localStorage is unavailable
+  }
+  return 'default';
+}
+
+function setStoredTheme(theme) {
+  try {
+    localStorage.setItem('zalo-ui-theme', theme);
+  } catch {
+    // Safe fallback if localStorage is unavailable
+  }
+}
+
+function applyTheme(themeName) {
+  const resolvedTheme = SUPPORTED_THEMES.includes(themeName) ? themeName : 'default';
+  state.theme = resolvedTheme;
+  setStoredTheme(resolvedTheme);
+
+  document.body.setAttribute('data-theme', resolvedTheme);
+  document.body.classList.remove('theme-default', 'theme-light', 'theme-dark', 'theme-glass', 'theme-origin');
+  document.body.classList.add(`theme-${resolvedTheme}`);
+
+  // Maintain backward compatibility with existing body.dark behavior
+  document.body.classList.toggle('dark', resolvedTheme !== 'light');
+
+  if (els.themeSelect && els.themeSelect.value !== resolvedTheme) {
+    els.themeSelect.value = resolvedTheme;
+  }
+  if (els.btnThemeToggle) {
+    if (resolvedTheme === 'light') {
+      els.btnThemeToggle.textContent = '🌙';
+      els.btnThemeToggle.title = 'Chuyển sang giao diện tối';
+      els.btnThemeToggle.setAttribute('aria-label', 'Chuyển sang giao diện tối');
+    } else if (resolvedTheme === 'glass') {
+      els.btnThemeToggle.textContent = '✨';
+      els.btnThemeToggle.title = 'Chuyển sang giao diện sáng';
+      els.btnThemeToggle.setAttribute('aria-label', 'Chuyển sang giao diện sáng');
+    } else if (resolvedTheme === 'origin') {
+      els.btnThemeToggle.textContent = '🏛️';
+      els.btnThemeToggle.title = 'Chuyển sang giao diện sáng';
+      els.btnThemeToggle.setAttribute('aria-label', 'Chuyển sang giao diện sáng');
+    } else {
+      els.btnThemeToggle.textContent = '☀️';
+      els.btnThemeToggle.title = 'Chuyển sang giao diện sáng';
+      els.btnThemeToggle.setAttribute('aria-label', 'Chuyển sang giao diện sáng');
+    }
+  }
+}
+
 function applySavedTheme() {
-  const saved = localStorage.getItem('zalo-ui-theme') || 'dark';
-  state.theme = saved === 'light' ? 'light' : 'dark';
-  document.body.classList.toggle('dark', state.theme === 'dark');
-  if (els.btnThemeToggle) els.btnThemeToggle.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+  applyTheme(getStoredTheme());
 }
 
 function toggleTheme() {
-  state.theme = state.theme === 'dark' ? 'light' : 'dark';
-  localStorage.setItem('zalo-ui-theme', state.theme);
-  applySavedTheme();
+  const nextTheme = state.theme === 'light' ? 'dark' : 'light';
+  applyTheme(nextTheme);
 }
 
 function applySavedSidebarWidth() {
@@ -407,6 +468,7 @@ async function boot() {
 function bindEvents() {
   document.addEventListener('click', maybeRequestNotificationPermission, { passive: true });
   els.btnThemeToggle?.addEventListener('click', toggleTheme);
+  els.themeSelect?.addEventListener('change', (e) => applyTheme(e.target.value));
   els.btnRefresh.addEventListener('click', reloadState);
   els.btnStartQr.addEventListener('click', () => post('/api/sessions/qr/start').then(reloadState));
   els.btnConfirmQr.addEventListener('click', () => post('/api/sessions/qr/confirm').then(reloadState));
