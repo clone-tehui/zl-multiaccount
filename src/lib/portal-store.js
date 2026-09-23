@@ -7,7 +7,6 @@ export class PortalStore {
   constructor(baseDir, options = {}) {
     this.baseDir = baseDir;
     this.filePath = path.join(baseDir, 'portal.json');
-    this.seedAdmin = options.seedAdmin || 'admin';
     this.cachedState = null;
     this.cachedStatKey = null;
     this.revisionCounter = 0;
@@ -71,24 +70,9 @@ function markPortalStateRevision(state, revision) {
 
 function buildDefaultPortalState(seedAdmin) {
   return {
-    users: [
-      {
-        id: seedAdmin,
-        username: seedAdmin,
-        displayName: seedAdmin,
-        roles: ['admin'],
-        departmentIds: ['default'],
-        permissions: ['*'],
-        status: 'online',
-        lastActiveAt: new Date().toISOString(),
-        lastAssignedAt: null,
-        forceOfflineUntil: null,
-        maxOpenConversations: 20,
-        active: true
-      }
-    ],
+    users: [],
     departments: [
-      { id: 'default', code: 'default', name: 'Default', managerUserIds: [seedAdmin], active: true }
+      { id: 'default', code: 'default', name: 'Default', managerUserIds: [], active: true }
     ],
     channels: [],
     threadBindings: {},

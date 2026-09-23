@@ -6,6 +6,7 @@ const state = {
   view: null,
   activeThreadId: null,
   authenticated: false,
+  authIdentity: null,
   eventSource: null,
   currentView: 'chats',
   selectedAiDepartmentId: null,
@@ -77,6 +78,11 @@ const els = {
   loginUsername: document.getElementById('login-username'),
   loginPassword: document.getElementById('login-password'),
   loginError: document.getElementById('login-error'),
+  setupForm: document.getElementById('setup-form'),
+  setupUsername: document.getElementById('setup-username'),
+  setupPassword: document.getElementById('setup-password'),
+  setupPasswordConfirm: document.getElementById('setup-password-confirm'),
+  setupError: document.getElementById('setup-error'),
   btnLogout: document.getElementById('btn-logout'),
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
   themeSelect: document.getElementById('theme-select'),
@@ -381,7 +387,7 @@ function applyTheme(themeName) {
   setStoredTheme(resolvedTheme);
 
   document.body.setAttribute('data-theme', resolvedTheme);
-  document.body.classList.remove('theme-default', 'theme-light', 'theme-dark', 'theme-glass', 'theme-origin');
+  document.body.classList.remove('theme-default', 'theme-light', 'theme-dark', 'theme-glass', 'theme-origin', 'theme-sample');
   document.body.classList.add(`theme-${resolvedTheme}`);
 
   // Maintain backward compatibility with existing body.dark behavior
@@ -532,6 +538,7 @@ function bindEvents() {
     }
   });
   els.loginForm.addEventListener('submit', handleLogin);
+  els.setupForm.addEventListener('submit', handleSetup);
   els.threadSearch.addEventListener('input', handleIntegratedSearchInput);
   els.accountSelect.addEventListener('change', handleAccountSelect);
   document.addEventListener('visibilitychange', handleVisibilityRecovery);
@@ -591,16 +598,26 @@ function bindEvents() {
 function switchView(name) {
   hideContextMenu();
   if (name !== 'chats') hideThreadMeta();
-  state.currentView = name;
-  els.chatView.classList.toggle('active', name === 'chats');
-  els.utilityView.classList.toggle('active', name === 'utility');
-  els.btnViewChats.classList.toggle('active', name === 'chats');
-  els.btnViewUtility.classList.toggle('active', name === 'utility');
+  const showingChats = name === 'chats';
+  state.currentView = showingChats ? 'chats' : 'utility';
+  // These are separate pages in the main panel. Use hidden as well as active so
+  // legacy CSS can never leave Chat and Utilities visible together.
+  els.chatView.hidden = !showingChats;
+  els.utilityView.hidden = showingChats;
+  els.chatView.classList.toggle('active', showingChats);
+  els.utilityView.classList.toggle('active', !showingChats);
+  els.btnViewChats.classList.toggle('active', showingChats);
+  els.btnViewUtility.classList.toggle('active', !showingChats);
 }
 
 async function hydrateAuth() {
   try {
     const auth = await getJson('/api/auth/status');
+    state.authIdentity = auth.authenticated ? auth : null;
+    if (auth.setupRequired) {
+      setAuthenticated(false, true);
+      return;
+    }
     if (auth.authEnabled && !auth.authenticated) {
       setAuthenticated(false);
       return;
@@ -614,7 +631,7 @@ async function hydrateAuth() {
   }
 }
 
-function setAuthenticated(value) {
+function setAuthenticated(value, setupRequired = false) {
   state.authenticated = value;
   els.authOverlay.classList.toggle('hidden', value);
   els.appShell.classList.toggle('hidden', !value);
@@ -623,7 +640,10 @@ function setAuthenticated(value) {
   if (!value) {
     disconnectEvents();
     els.loginPassword.value = '';
-    els.loginUsername.focus();
+    els.loginForm.classList.toggle('hidden', setupRequired);
+    els.setupForm.classList.toggle('hidden', !setupRequired);
+    if (setupRequired) els.setupUsername.focus();
+    else els.loginUsername.focus();
   }
 }
 
@@ -634,7 +654,8 @@ async function handleLogin(event) {
   const password = els.loginPassword.value;
   if (!username || !password) return showLoginError('Nhập tài khoản và mật khẩu');
   try {
-    await post('/api/auth/login', { username, password });
+    const auth = await post('/api/auth/login', { username, password });
+    state.authIdentity = auth;
     setAuthenticated(true);
     await reloadState();
     connectEvents();
@@ -644,9 +665,33 @@ async function handleLogin(event) {
   }
 }
 
+async function handleSetup(event) {
+  event.preventDefault();
+  els.setupError.classList.add('hidden');
+  const username = els.setupUsername.value.trim();
+  const password = els.setupPassword.value;
+  if (!username || !password) return showSetupError('Nhập tên đăng nhập và mật khẩu');
+  if (password !== els.setupPasswordConfirm.value) return showSetupError('Xác nhận mật khẩu chưa khớp');
+  try {
+    const auth = await post('/api/auth/setup', { username, password });
+    state.authIdentity = auth;
+    setAuthenticated(true);
+    await reloadState();
+    connectEvents();
+  } catch (error) {
+    showSetupError(error.message || 'Không tạo được tài khoản quản trị');
+  }
+}
+
+function showSetupError(message) {
+  els.setupError.textContent = message;
+  els.setupError.classList.remove('hidden');
+}
+
 async function logout() {
   await post('/api/auth/logout');
   state.view = null;
+  state.authIdentity = null;
   state.rbac = null;
   state.activeThreadId = null;
   state.threadDrafts = {};
@@ -2374,33 +2419,14 @@ async function loadRbacCatalog() {
 }
 
 function renderRbacPanel() {
-  if (!els.rbacPanel) return;
-  const rbacState = state.rbac || {};
-  const catalog = rbacState.catalog || {};
-  const portal = catalog.portal || {};
-  const departments = Array.isArray(portal.departments) ? portal.departments : [];
-  const channels = Array.isArray(portal.channels) ? portal.channels : [];
-  const users = Array.isArray(catalog.users) ? catalog.users : [];
-
-  if (rbacState.error) {
-    els.rbacPanel.textContent = rbacState.error;
-    if (els.rbacDepartmentsBoard) els.rbacDepartmentsBoard.textContent = rbacState.error;
-    if (els.rbacRoleMatrix) els.rbacRoleMatrix.textContent = rbacState.error;
+  const internalRbacContext = { state, post, getJson, reloadState, showAppNotice, escapeHtml, escapeAttribute };
+  window.__internalRbacContext = internalRbacContext;
+  if (typeof window.renderInternalRbacWorkspace === 'function') {
+    window.renderInternalRbacWorkspace(internalRbacContext);
     return;
   }
-
-  els.rbacPanel.innerHTML = [
-    `<div><strong>Bộ phận:</strong> ${departments.length}</div>`,
-    `<div><strong>Account nội bộ đã tạo:</strong> ${users.length}</div>`,
-    `<div><strong>Account Zalo đã cấp:</strong> ${channels.length}</div>`
-  ].join('');
-
-  renderDepartmentsBoard(departments, users, channels);
-  renderDepartmentAssignmentControls(departments);
-  renderUsersBoard(users, departments);
-  renderRbacDepartmentPicker(departments);
-  renderRbacAccountPicker();
-  renderRoleMatrix(rbacState.roles);
+  const root = document.querySelector('#internal-rbac-workspace');
+  if (root) root.textContent = 'Đang tải Phân quyền nội bộ…';
 }
 
 function renderDepartmentsBoard(departments, users, channels) {
@@ -2833,7 +2859,10 @@ function renderSession() {
   const lostConnection = ['reconnect_failed', 'login_error'].includes(session.status);
   els.sessionBadge.textContent = online ? 'Connected' : session.status;
   els.sessionBadge.className = `badge ${online ? 'badge-online' : 'badge-offline'}`;
-  els.accountLine.textContent = `${session.account?.displayName || 'Chưa có tài khoản kết nối'} · UI ${CLIENT_VERSION}`;
+  const username = String(state.authIdentity?.username || '').trim();
+  const roles = Array.isArray(state.authIdentity?.roles) ? state.authIdentity.roles : [];
+  const roleLabel = roles.includes('admin') ? 'Quản trị viên' : roles.includes('staff') ? 'Nhân viên' : 'Người dùng';
+  els.accountLine.textContent = username ? `${username} · ${roleLabel}` : 'Tài khoản quản trị';
   els.syncNote.textContent = lostConnection
     ? 'Phiên Zalo đã rớt. Hãy bấm tạo QR mới và quét lại để nối realtime.'
     : [session.syncInfo?.note || '', `Server ${state.serverVersion || CLIENT_VERSION}`].filter(Boolean).join(' · ');

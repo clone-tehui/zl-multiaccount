@@ -187,9 +187,14 @@ export class ZaloWebProvider {
     }
   }
 
-  startQrLogin() {
+  startQrLogin(options = {}) {
     if (this.loginPromise) {
-      return this.store.read().session;
+      const current = this.store.read().session || {};
+      const retryable = ['qr_declined', 'qr_expired'].includes(current.status);
+      if (!retryable) return current;
+      // zca-js resolves its callback flow with `undefined` after a declined QR.
+      // Clear the settled/stale promise so this click starts a genuinely new QR.
+      this.loginPromise = null;
     }
 
     this.pendingQrCredentials = null;
@@ -207,8 +212,16 @@ export class ZaloWebProvider {
       .loginQR({}, (event) => this.onLoginEvent(event))
       .then(async (api) => {
         this.api = api;
-        await this.afterLogin(api, null, { syncUi: true, credentials: this.pendingQrCredentials, loadHistory: true });
-        return this.store.read().session;
+        const accountId = await this.afterLogin(api, null, { syncUi: true, credentials: this.pendingQrCredentials, loadHistory: true });
+        const session = this.store.read().session;
+        const account = this.store.read().accounts?.[accountId] || {};
+        // The caller can atomically attach the newly authenticated account to its
+        // authorized portal department before the QR flow is considered complete.
+        if (typeof options.onAuthenticated === 'function') await options.onAuthenticated({
+          ...session,
+          account: { ...account, id: accountId, userId: accountId }
+        });
+        return session;
       })
       .catch((error) => {
         this.handleConnectionLoss(error, 'login_error');
@@ -1017,6 +1030,9 @@ export class ZaloWebProvider {
     if (event.type === LoginQRCallbackEventType.QRCodeExpired) {
       this.store.update((state) => {
         state.session.status = 'qr_expired';
+        state.session.qrCode = null;
+        state.session.qrImage = null;
+        state.session.error = 'Mã QR đã hết hạn. Bấm “Thêm account bằng QR” để tạo mã mới.';
         state.session.updatedAt = new Date().toISOString();
         return state;
       });
@@ -1027,7 +1043,9 @@ export class ZaloWebProvider {
     if (event.type === LoginQRCallbackEventType.QRCodeDeclined) {
       this.store.update((state) => {
         state.session.status = 'qr_declined';
-        state.session.error = event.data.code;
+        state.session.qrCode = null;
+        state.session.qrImage = null;
+        state.session.error = 'Zalo đã từ chối lần quét này. Bấm “Thêm account bằng QR” để tạo mã QR mới.';
         state.session.updatedAt = new Date().toISOString();
         return state;
       });

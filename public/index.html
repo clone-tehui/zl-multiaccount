@@ -10,8 +10,11 @@
     <link rel="icon" type="image/png" sizes="64x64" href="/favicon-64.png?v=20260518zg" />
     <link rel="apple-touch-icon" sizes="512x512" href="/apple-touch-icon.png?v=20260518zg" />
     <link rel="manifest" href="/site.webmanifest?v=20260518zg" />
-    <link rel="stylesheet" href="/styles.css?v=20260528-agent-ui15" />
-  </head>
+    <link rel="stylesheet" href="/styles.css?v=20260921-rbac-full-redesign" />
+    <link rel="stylesheet" href="/rbac-redesign.css?v=20260921-rbac-full-redesign" />
+      <link rel="stylesheet" href="/theme-dark.css?v=20260921-system-theme3" />
+<style id="system-theme-critical">:root{color-scheme:dark!important}html body{background:#10121a!important;color:#f4f5fa!important}html body .auth-overlay{background:radial-gradient(ellipse at 8% 0%,#23203b 0%,transparent 45%),#10121a!important}html body .auth-overlay .auth-card{background:#191b24!important;border:1px solid #333745!important;color:#f4f5fa!important}html body .auth-overlay .auth-card h2{color:#f4f5fa!important}html body .auth-overlay .auth-card span{color:#a2a7b6!important}html body .auth-overlay .auth-card input{background:#11131b!important;border-color:#404450!important;color:#f4f5fa!important}html body .auth-overlay .auth-card button{background:#a79bff!important;border-color:#a79bff!important;color:#181421!important}</style>
+</head>
   <body>
     <div id="auth-overlay" class="auth-overlay hidden">
       <form id="login-form" class="auth-card">
@@ -27,6 +30,15 @@
         <p id="login-error" class="auth-error hidden"></p>
         <button class="primary-btn" type="submit">Đăng nhập</button>
       </form>
+      <form id="setup-form" class="auth-card hidden">
+        <h2>Thiết lập quản trị lần đầu</h2>
+        <p class="muted">Tạo tài khoản quản trị đầu tiên cho hệ thống.</p>
+        <label><span>Tên đăng nhập</span><input id="setup-username" autocomplete="username" placeholder="Ví dụ: admin" /></label>
+        <label><span>Mật khẩu</span><input id="setup-password" type="password" autocomplete="new-password" placeholder="Ít nhất 10 ký tự" /></label>
+        <label><span>Xác nhận mật khẩu</span><input id="setup-password-confirm" type="password" autocomplete="new-password" placeholder="Nhập lại mật khẩu" /></label>
+        <p id="setup-error" class="auth-error hidden"></p>
+        <button class="primary-btn" type="submit">Tạo tài khoản quản trị</button>
+      </form>
     </div>
 
     <div id="app-notice" class="app-notice hidden">
@@ -40,7 +52,7 @@
           <div class="brand-row">
             <div>
               <h1>Zalo User Server</h1>
-              <p id="account-line" class="muted">Chưa có tài khoản kết nối</p>
+              <p id="account-line" class="muted">Tài khoản quản trị</p>
             </div>
             <span id="session-badge" class="badge badge-offline">Offline</span>
           </div>
@@ -55,6 +67,7 @@
                 <option value="dark">Tối</option>
                 <option value="glass">Liquid Glass</option>
                 <option value="origin">Origin Gallery</option>
+          <option value="sample">Tím đêm · Phân quyền</option>
               </select>
               <button id="btn-theme-toggle" class="ghost-btn icon-btn" type="button" title="Đổi giao diện" aria-label="Chuyển đổi giao diện sáng tối">🌙</button>
             </div>
@@ -353,108 +366,7 @@
             </div>
           </section>
           <section id="utility-rbac-panel" class="panel utility-panel full-width-panel">
-            <div class="panel-title-row">
-              <h2>Phân quyền nội bộ</h2>
-            </div>
-            <div id="rbac-panel" class="friend-results muted">Đang tải cấu hình phân quyền...</div>
-            <section class="rbac-block top-gap-sm">
-              <div class="panel-title-row">
-                <h3>Bảng quản lí các bộ phận</h3>
-              </div>
-              <div id="rbac-departments-board" class="rbac-board muted">Đang tải bộ phận...</div>
-            </section>
-            <section class="rbac-block top-gap-sm">
-              <div class="panel-title-row">
-                <h3>Gán account Zalo vào bộ phận</h3>
-              </div>
-              <div class="details-grid">
-                <label>
-                  <span>Bộ phận nhận account</span>
-                  <select id="rbac-account-department-id">
-                    <option value="">Chọn bộ phận</option>
-                  </select>
-                </label>
-                <div>
-                  <span>Account Zalo đã quét trên server</span>
-                  <div id="rbac-department-account-picker" class="rbac-account-picker muted">Chọn bộ phận để hiện account.</div>
-                  <small class="muted">Mỗi account Zalo chỉ trực thuộc 1 bộ phận tại một thời điểm.</small>
-                </div>
-              </div>
-              <div class="row-gap end-row top-gap-sm">
-                <button id="btn-rbac-save-department-accounts" class="secondary-btn" type="button">Lưu account cho bộ phận này</button>
-              </div>
-            </section>
-            <section class="rbac-block top-gap-sm">
-              <div class="panel-title-row">
-                <h3>Ma trận quyền theo vai trò</h3>
-              </div>
-              <div id="rbac-role-matrix" class="rbac-matrix muted">Đang tải quyền...</div>
-              <div class="row-gap end-row top-gap-sm">
-                <button id="btn-rbac-apply-roles" class="primary-btn" type="button">Áp dụng quyền ngay</button>
-              </div>
-            </section>
-            <div class="details-grid top-gap-sm">
-              <label>
-                <span>Bộ phận</span>
-                <input id="rbac-department-code" placeholder="sale" />
-              </label>
-              <label>
-                <span>Tên bộ phận</span>
-                <input id="rbac-department-name" placeholder="Sales" />
-              </label>
-              <label>
-                <span>Manager usernames</span>
-                <input id="rbac-department-managers" placeholder="manager1,manager2" />
-              </label>
-            </div>
-            <div class="row-gap end-row">
-              <button id="btn-rbac-save-department" class="secondary-btn" type="button">Lưu bộ phận</button>
-            </div>
-            <section class="rbac-block top-gap-sm">
-              <div class="panel-title-row">
-                <h3>Danh sách account nội bộ</h3>
-              </div>
-              <div id="rbac-users-board" class="rbac-board muted">Đang tải account...</div>
-            </section>
-            <div class="details-grid top-gap-sm">
-              <label>
-                <span>Username</span>
-                <input id="rbac-user-username" placeholder="nhanvien1" />
-              </label>
-              <label>
-                <span>Tên hiển thị</span>
-                <input id="rbac-user-display" placeholder="Nhân viên 1" />
-              </label>
-              <label>
-                <span>Mật khẩu</span>
-                <div class="password-field">
-                  <input id="rbac-user-password" type="password" placeholder="Đặt mật khẩu đăng nhập" />
-                  <button id="btn-rbac-toggle-password" class="ghost-btn password-toggle" type="button" aria-label="Hiện mật khẩu" title="Hiện mật khẩu">👁</button>
-                </div>
-              </label>
-              <label>
-                <span>Vai trò</span>
-                <select id="rbac-user-role">
-                  <option value="staff">staff</option>
-                  <option value="manager">manager</option>
-                </select>
-              </label>
-              <label>
-                <span>Bộ phận</span>
-                <div id="rbac-user-department-picker" class="rbac-account-picker muted">Đang tải bộ phận...</div>
-                <input id="rbac-user-departments" type="hidden" />
-                <small class="muted">Manager có thể chọn nhiều bộ phận. Staff chỉ nên chọn 1 bộ phận.</small>
-              </label>
-              <div>
-                <span>Được vào các account Zalo</span>
-                <div id="rbac-user-account-picker" class="rbac-account-picker muted">Đang tải account Zalo đang login...</div>
-                <input id="rbac-user-account-ids" type="hidden" />
-                <small class="muted">Chỉ hiện account thuộc đúng bộ phận đã chọn ở trên.</small>
-              </div>
-            </div>
-            <div class="row-gap end-row">
-              <button id="btn-rbac-save-user" class="secondary-btn" type="button">Lưu user</button>
-            </div>
+            <div id="internal-rbac-workspace" class="internal-rbac-workspace" aria-live="polite">Đang tải Phân quyền nội bộ…</div>
           </section>
           <section id="utility-ai-panel" class="panel utility-panel full-width-panel ai-admin-panel">
             <div class="panel-title-row">
@@ -764,6 +676,7 @@
       <button id="image-lightbox-next" class="image-lightbox-nav next" type="button" aria-label="Ảnh sau">›</button>
     </div>
 
-    <script type="module" src="/app.js?v=20260528-agent-ui15"></script>
+    <script type="module" src="/app.js?v=20260921-rbac-full-redesign"></script>
+    <script src="/rbac-redesign.js?v=20260921-rbac-full-redesign" defer></script>
   </body>
 </html>

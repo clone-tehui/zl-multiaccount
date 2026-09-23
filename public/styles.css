@@ -7733,3 +7733,140 @@ img.avatar-image {
     background: #FFFFFF !important;
   }
 }
+
+/* Keep long internal-permission and feature lists usable inside the Utilities view. */
+#utility-view {
+  min-height: 0;
+}
+
+#utility-rbac-panel,
+#utility-rbac-panel .panel,
+#utility-rbac-panel .utility-panel,
+#utility-rbac-panel .rbac-panel,
+#utility-rbac-panel [id*="rbac"],
+#utility-rbac-panel [class*="rbac"] {
+  min-height: 0;
+}
+
+#utility-rbac-panel {
+  max-height: calc(100vh - 150px);
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-right: 6px;
+}
+
+#utility-rbac-panel :is([id*="permission"], [class*="permission"], [id*="feature"], [class*="feature"], [id*="roles"], [class*="roles"], [id*="users"], [class*="users"]) {
+  max-height: min(52vh, 560px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* Utilities must be independently scrollable; long feature cards keep their own vertical scroll. */
+.view-panel.utility-view,
+#utility-view {
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding-bottom: 32px;
+}
+
+#utility-view .utility-columns,
+#utility-view .full-width-panel,
+#utility-view .utility-panel {
+  min-height: 0;
+}
+
+#utility-view .utility-panel,
+#utility-view .full-width-panel,
+#utility-view .ai-admin-panel {
+  max-height: min(72vh, 760px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+#utility-view :is(
+  .friend-results,
+  .rbac-board,
+  .rbac-matrix,
+  .rbac-account-picker,
+  .account-picker-grid,
+  .ai-agent-system-panel,
+  .ai-accordion-body,
+  [id$="-board"],
+  [id$="-picker"],
+  [id*="feature"],
+  [class*="feature"]
+) {
+  min-height: 0;
+  max-height: min(52vh, 560px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+#utility-view details > summary {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* Utility tab: one natural, full-height document flow with a single outer scrollbar.
+   Do not flex-shrink cards; that was compressing cards when a long section expanded. */
+.view-panel.utility-view,
+#utility-view {
+  flex: 1 1 0;
+  min-height: 0;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+#utility-view > .utility-columns,
+#utility-view > .utility-panel,
+#utility-view > .full-width-panel {
+  flex: 0 0 auto;
+  min-height: min-content;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Long lists may scroll inside their own card, without shrinking the card itself. */
+#utility-view :is(
+  .friend-results,
+  .rbac-board,
+  .rbac-matrix,
+  .rbac-account-picker,
+  .account-picker-grid,
+  .ai-agent-system-db-board
+) {
+  max-height: min(52vh, 560px);
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+/* Chat and Utilities are mutually exclusive full-page views. */
+#chat-view[hidden],
+#utility-view[hidden] { display: none !important; }
+#chat-view:not([hidden]),
+#utility-view:not([hidden]) {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+#chat-view:not([hidden]) { flex-direction: column; }
+#utility-view:not([hidden]) { flex-direction: column; }

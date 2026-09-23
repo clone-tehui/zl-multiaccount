@@ -35,9 +35,6 @@ const dataDir = resolveDataDir();
 const port = Number(process.env.PORT || 4310);
 const providerName = process.env.PROVIDER || 'mock';
 const sessionSecret = process.env.SESSION_SECRET || 'change-me';
-const appUsername = process.env.APP_USERNAME || 'admin';
-const appPassword = process.env.APP_PASSWORD || 'admin';
-const authEnabled = Boolean(appUsername && appPassword);
 const appVersion = process.env.APP_VERSION || detectAppVersion();
 const MAX_UPLOAD_FILE_BYTES = 25 * 1024 * 1024;
 const chiHomeBookingBridgeBaseUrl = String(process.env.CHIHOME_BOOKING_BRIDGE_URL || 'https://tehui.io.vn/bridge/zalo-booking').trim();
@@ -47,7 +44,7 @@ const scopedViewBodyCache = new Map();
 const SCOPED_VIEW_BODY_CACHE_LIMIT = 64;
 const db = createDbClient();
 const store = new JsonStore(dataDir);
-const portalStore = new PortalStore(dataDir, { seedAdmin: appUsername });
+const portalStore = new PortalStore(dataDir);
 const auditService = createAuditService(db);
 const agentSystemDb = initializeAgentSystemDb(getAgentSystemDb());
 const portalSyncService = createPortalSyncService(db);
@@ -102,9 +99,11 @@ async function handleRequest(req, res) {
 
   if (req.method === 'GET' && url.pathname === '/api/auth/status') {
     const principal = getAuthSession(req);
+    const setupRequired = isInitialAdminSetupRequired(portalStore.read());
     return json(res, 200, {
       ok: true,
-      authEnabled,
+      authEnabled: !setupRequired,
+      setupRequired,
       authenticated: Boolean(principal),
       username: principal?.username || null,
       source: principal?.source || null,
@@ -115,26 +114,11 @@ async function handleRequest(req, res) {
   if (req.method === 'POST' && url.pathname === '/api/auth/login') {
     const body = await readJsonBody(req);
     return handleAction(res, async () => {
-      if (!authEnabled) return { ok: true, authenticated: true, disabled: true };
+      if (isInitialAdminSetupRequired(portalStore.read())) throw new Error('Chưa thiết lập tài khoản quản trị đầu tiên');
       const username = String(body.username || '').trim();
       const password = String(body.password || '');
       const portalState = portalStore.read();
       const matchedUser = (portalState.users || []).find((item) => String(item.username || item.id || '').trim() === username && item.active !== false);
-
-      if (safeEqual(username, appUsername) && safeEqual(password, appPassword)) {
-        const token = createSessionToken(username);
-        setSessionCookie(res, token);
-        const ssoToken = createPortalSessionToken({ id: username, username, displayName: username, roles: ['admin'], permissions: ['*'], departmentIds: [] }, { jwtSecret: portalConfig.jwtSecret });
-        res.setHeader('Set-Cookie', [
-          buildLegacySessionCookie(token),
-          buildPortalSessionCookie(ssoToken, {
-            cookieDomain: resolvePortalCookieDomain(req),
-            secure: resolvePortalCookieSecure(req),
-            sameSite: portalConfig.sameSite
-          })
-        ]);
-        return { ok: true, authenticated: true, username, sso: true, roles: ['admin'] };
-      }
 
       if (!matchedUser || !verifyPassword(password, matchedUser.passwordHash || '')) {
         throw new Error('Sai tài khoản hoặc mật khẩu');
@@ -158,6 +142,28 @@ async function handleRequest(req, res) {
         })
       ]);
       return { ok: true, authenticated: true, username: matchedUser.username, sso: true, roles: matchedUser.roles || [] };
+    });
+  }
+
+  if (req.method === 'POST' && url.pathname === '/api/auth/setup') {
+    const body = await readJsonBody(req);
+    return handleAction(res, async () => {
+      if (!isInitialAdminSetupRequired(portalStore.read())) throw new Error('Tài khoản quản trị đã được thiết lập');
+      const username = String(body.username || '').trim();
+      const password = String(body.password || '');
+      if (!/^[a-zA-Z0-9._-]{3,64}$/.test(username)) throw new Error('Tên đăng nhập gồm 3–64 ký tự: chữ, số, dấu chấm, gạch dưới hoặc gạch ngang');
+      if (password.length < 10) throw new Error('Mật khẩu phải có ít nhất 10 ký tự');
+      const now = new Date().toISOString();
+      portalStore.update((state) => {
+        state.users = [{ id: username, username, displayName: username, passwordHash: hashPassword(password), roles: ['admin'], departmentIds: ['default'], permissions: ['*'], status: 'online', lastActiveAt: now, lastAssignedAt: null, forceOfflineUntil: null, maxOpenConversations: 20, active: true }];
+        state.departments = (state.departments || []).map((department) => department.id === 'default' ? { ...department, managerUserIds: [username] } : department);
+        state.updatedAt = now;
+        return state;
+      });
+      const token = createSessionToken(username);
+      const ssoToken = createPortalSessionToken({ id: username, username, displayName: username, roles: ['admin'], permissions: ['*'], departmentIds: ['default'] }, { jwtSecret: portalConfig.jwtSecret });
+      res.setHeader('Set-Cookie', [buildLegacySessionCookie(token), buildPortalSessionCookie(ssoToken, { cookieDomain: resolvePortalCookieDomain(req), secure: resolvePortalCookieSecure(req), sameSite: portalConfig.sameSite })]);
+      return { ok: true, authenticated: true, username, sso: true, roles: ['admin'] };
     });
   }
 
@@ -356,7 +362,8 @@ async function handleRequest(req, res) {
 
   if (req.method === 'POST' && url.pathname === '/api/portal/departments') {
     const principal = getRequiredAuth(req);
-    requirePermission(principal, 'portal.departments.write');
+    // A department defines a security boundary: Admin only.
+    requireAdminAccess(principal);
     const body = await readJsonBody(req);
     return handleAction(res, async () => {
       const department = {
@@ -374,6 +381,23 @@ async function handleRequest(req, res) {
       await portalSyncService.syncDepartment(department);
       await recordOperationalEvent({ actorUserId: principal.userId, action: 'portal.department.upsert', resourceType: 'department', resourceId: department.id, departmentId: department.id, payload: department });
       return { ok: true, item: department, portal: buildPortalSummary(principal, next) };
+    });
+  }
+
+  if (req.method === 'DELETE' && url.pathname.startsWith('/api/portal/departments/')) {
+    const principal = getRequiredAuth(req);
+    requireAdminAccess(principal);
+    return handleAction(res, async () => {
+      const departmentId = decodeURIComponent(url.pathname.slice('/api/portal/departments/'.length));
+      const current = portalStore.read();
+      const existing = (current.departments || []).find((item) => String(item.id) === String(departmentId));
+      if (!existing) { const error = new Error('Không tìm thấy bộ phận'); error.statusCode = 404; throw error; }
+      const usedByUser = (current.users || []).some((user) => (user.departmentIds || []).map(String).includes(String(departmentId)));
+      const usedByChannel = (current.channels || []).some((channel) => String(channel.departmentId || '') === String(departmentId));
+      if (usedByUser || usedByChannel) { const error = new Error('Không thể xoá bộ phận đang có nhân sự hoặc account Zalo'); error.statusCode = 409; throw error; }
+      const next = portalStore.update((draft) => { draft.departments = (draft.departments || []).filter((item) => String(item.id) !== String(departmentId)); draft.updatedAt = new Date().toISOString(); return draft; });
+      await recordOperationalEvent({ actorUserId: principal.userId, action: 'portal.department.delete', resourceType: 'department', resourceId: departmentId, departmentId, payload: { id: departmentId } });
+      return { ok: true, deletedId: departmentId, portal: buildPortalSummary(principal, next) };
     });
   }
 
@@ -1277,7 +1301,45 @@ async function handleRequest(req, res) {
   if (req.method === 'POST' && url.pathname === '/api/sessions/qr/start') {
     const principal = getRequiredAuth(req);
     requirePermission(principal, 'channels.manage');
-    return handleAction(res, () => provider.startQrLogin());
+    const body = await readJsonBody(req);
+    const departmentId = String(body?.departmentId || '').trim();
+    if (!departmentId) {
+      const error = new Error('Chọn bộ phận nhận account Zalo trước khi tạo QR.');
+      error.statusCode = 400;
+      throw error;
+    }
+    assertDepartmentAccess(principal, departmentId);
+    return handleAction(res, () => provider.startQrLogin({
+      onAuthenticated: async (session) => {
+        const account = session?.account || {};
+        const accountId = String(account.id || account.userId || '').trim();
+        if (!accountId) throw new Error('Zalo đăng nhập thành công nhưng thiếu mã account để gán bộ phận.');
+        const portalState = portalStore.read();
+        const existing = (portalState.channels || []).find((item) => [item.id, item.code, item.accountId].map((value) => String(value || '').trim()).includes(accountId)) || {};
+        const channel = {
+          ...existing,
+          id: existing.id || accountId,
+          code: existing.code || accountId,
+          accountId,
+          name: existing.name || account.displayName || account.name || accountId,
+          departmentId,
+          channelType: existing.channelType || 'zalo_personal',
+          botStatus: existing.botStatus || 'disabled',
+          routingMode: existing.routingMode || 'least_connections',
+          credentials: existing.credentials || {},
+          members: Array.isArray(existing.members) ? existing.members : [],
+          active: existing.active !== false
+        };
+        const next = portalStore.update((draft) => {
+          draft.channels = upsertById(draft.channels || [], channel);
+          draft.updatedAt = new Date().toISOString();
+          return draft;
+        });
+        await portalSyncService.syncChannel(channel);
+        await recordOperationalEvent({ actorUserId: principal.userId, action: 'portal.channel.qr_onboard', resourceType: 'channel', resourceId: channel.id, departmentId, payload: maskChannelSecrets(channel) });
+        return next;
+      }
+    }));
   }
 
   if (req.method === 'POST' && url.pathname === '/api/sessions/qr/confirm') {
@@ -1653,7 +1715,6 @@ function writeUnhandledError(res, error) {
 }
 
 function isAuthenticated(req) {
-  if (!authEnabled) return true;
   return Boolean(getAuthSession(req));
 }
 
@@ -1795,6 +1856,10 @@ function safeEqual(left, right) {
   const b = Buffer.from(String(right));
   if (a.length !== b.length) return false;
   return crypto.timingSafeEqual(a, b);
+}
+
+function isInitialAdminSetupRequired(portalState) {
+  return !Array.isArray(portalState?.users) || portalState.users.length === 0;
 }
 
 function normalizePhoneDigits(value) {
@@ -2706,6 +2771,8 @@ function validatePortalUserDepartments(user, portalState) {
   const departments = Array.isArray(user?.departmentIds) ? user.departmentIds.map(String).filter(Boolean) : [];
   const roles = Array.isArray(user?.roles) ? user.roles.map(String) : [];
   if (!roles.length) return;
+  // Admin is global and intentionally has no department requirement.
+  if (roles.includes('admin')) return;
   if (roles.includes('staff')) {
     if (departments.length !== 1) {
       const error = new Error('Nhân viên phải thuộc đúng 1 bộ phận');
