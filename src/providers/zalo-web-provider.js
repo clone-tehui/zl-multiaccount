@@ -102,6 +102,7 @@ export class ZaloWebProvider {
   }
 
   handleConnectionLoss(error, status = 'reconnect_failed', accountId = null) {
+    if (accountId && String(requestAccountContext.getStore()?.accountId || '') !== String(accountId)) return runWithAccount(accountId, () => this.handleConnectionLoss(error, status, accountId));
     const targetAccountId = accountId || this.store.read().activeAccountId || null;
     if (targetAccountId) {
       const client = this.accountClients.get(targetAccountId);
@@ -987,7 +988,7 @@ export class ZaloWebProvider {
             await runWithAccount(accountId, () => this.deliverWebhookEvent(eventName, payload, accountId)).catch(() => null);
           }
           if (eventName === 'message') {
-            await this.deliverChatbotMessageEvent(payload, accountId).catch(() => null);
+            await runWithAccount(accountId, () => this.deliverChatbotMessageEvent(payload, accountId)).catch(() => null);
           }
         } catch (error) {
           console.error(`[zalo-user-server] ingest ${eventName} failed`, error);
@@ -1402,6 +1403,7 @@ export class ZaloWebProvider {
     await this.ensureThreadMetadata({ threadId, senderId: counterpartId, isGroup }, targetAccountId);
 
     const payload = {
+      accountId: targetAccountId,
       id: String(message.data.msgId || message.data.cliMsgId || `msg-${Date.now()}`),
       threadId,
       senderId,
@@ -1649,6 +1651,7 @@ export class ZaloWebProvider {
   }
 
   startKeepAlive(accountId, api = this.api) {
+    if (accountId && String(requestAccountContext.getStore()?.accountId || '') !== String(accountId)) return runWithAccount(accountId, () => this.startKeepAlive(accountId, api));
     const key = String(accountId || this.store.read().activeAccountId || '');
     if (!api || this.keepAliveTimers.has(key)) return;
     const timer = setInterval(async () => {

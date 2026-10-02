@@ -694,7 +694,7 @@ export function buildView(state) {
     aiAutomation: normalizeAiAutomationConfig(state.aiAutomation || {}),
     aiAutomationByDepartment: normalizeAiAutomationDepartmentMap(state.aiAutomationByDepartment || {}, state.aiAutomation || {}),
     aiAutomationUsage: normalizeAiAutomationUsage(state.aiAutomationUsage || {}),
-    aiAutomationLogs: normalizeAiAutomationLogs(state.aiAutomationLogs || []),
+    aiAutomationLogs: normalizeAiAutomationLogs((state.aiAutomationLogs || []).filter((entry) => String(entry.accountId || '') === String(state.activeAccountId || ''))),
     session: state.session,
     labels: state.labels,
     zalo: state.zalo,

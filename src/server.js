@@ -219,7 +219,7 @@ async function handleRequest(req, res) {
         error.statusCode = 403;
         throw error;
       }
-      const message = await provider.sendMessage({ accountId, threadId, text });
+      const message = await runWithAccount(accountId, () => provider.sendMessage({ accountId, threadId, text }));
       return { ok: true, message };
     });
   }
@@ -2963,7 +2963,7 @@ function serveUploadedFile(req, res, baseDir, fileName) {
   const principal = getRequiredAuth(req);
   const ownershipPath = `${target}.ownership.json`;
   const ownership = fs.existsSync(ownershipPath) ? JSON.parse(fs.readFileSync(ownershipPath, 'utf8')) : null;
-  if ((ownership && ownership.accountId !== currentRequestAccountId()) || (!ownership && !hasPortalAdminAccess(principal))) {
+  if (!ownership || ownership.accountId !== currentRequestAccountId()) {
     return json(res, 403, { ok: false, error: 'Forbidden: tệp ngoài phạm vi account' });
   }
   if (ownership && !hasPortalAdminAccess(principal)) assertThreadAccess(principal, ownership.threadId);
@@ -3035,7 +3035,7 @@ function writeUploadsToTempFiles(uploads, baseDir, threadId = null) {
       name,
       contentType,
       size: buffer.length,
-      url: `/api/uploads/${encodeURIComponent(storedName)}`,
+      url: `/api/uploads/${encodeURIComponent(storedName)}?accountId=${encodeURIComponent(currentRequestAccountId() || '')}`,
       previewUrl: contentType.startsWith('image/') ? `data:${contentType};base64,${upload.data}` : null
     });
   }

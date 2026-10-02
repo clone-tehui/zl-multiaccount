@@ -179,6 +179,17 @@ try {
   assert.equal((await request('staff-A', '/api/state', undefined, 'B')).status, 403);
   assert.equal((await request('empty', '/api/state')).body.threads.length, 0);
   checks.push('Foreign account read/search/profile/send/mutations/aliases/header denied; empty scope closed');
+  const uploadDirectory = path.join(dataDir, 'tmp-uploads');
+  fs.mkdirSync(uploadDirectory, { recursive: true });
+  fs.writeFileSync(path.join(uploadDirectory, 'owned.txt'), 'PRIVATE-MEDIA-A');
+  fs.writeFileSync(path.join(uploadDirectory, 'owned.txt.ownership.json'), JSON.stringify({ accountId: 'A', threadId: 'shared' }));
+  fs.writeFileSync(path.join(uploadDirectory, 'legacy.txt'), 'UNOWNED-MEDIA');
+  for (const [identity, accountId, filename, status] of [['staff-A', 'A', 'owned.txt', 200], ['staff-B', 'B', 'owned.txt', 403], ['admin', 'B', 'owned.txt', 403], ['admin', 'A', 'legacy.txt', 403]]) {
+    const media = await fetch(`http://127.0.0.1:${port}/api/uploads/${filename}?accountId=${accountId}`, { headers: { cookie: cookie(identity) } });
+    assert.equal(media.status, status);
+    await media.text();
+  }
+  checks.push('Media requires matching account ownership; foreign and unowned files denied including admin');
   const streamA = await openStream('staff-A', 'A');
   const streamB = await openStream('staff-B', 'B');
   await delay(50);

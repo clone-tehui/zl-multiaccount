@@ -725,6 +725,7 @@ async function reloadState() {
 
 function connectEvents() {
   if (state.eventSource || !state.authenticated) return;
+  const streamAccountId = String(state.view?.activeAccountId || '');
   clearTimeout(state.realtimeReconnectTimer);
   state.realtimeReconnectTimer = null;
   state.eventSource = new EventSource(`/api/events?accountId=${encodeURIComponent(state.view?.activeAccountId || '')}`);
@@ -735,6 +736,7 @@ function connectEvents() {
   };
   for (const name of ['snapshot', 'message.created', 'session.updated', 'thread.meta_updated']) {
     state.eventSource.addEventListener(name, (event) => {
+      if (streamAccountId !== String(state.view?.activeAccountId || '')) return;
       const payload = JSON.parse(event.data);
       const inner = payload.payload || payload;
       if (shouldIgnoreRealtimeEvent(payload, inner)) return;
@@ -2325,6 +2327,11 @@ function resetClientViewForAccountSwitch(accountId) {
   els.threadSearch.value = '';
   els.friendSearchResults.textContent = '';
   els.threadProfileModal.classList.add('hidden');
+  els.eventToastStack.textContent = '';
+  hideContextMenu();
+  closeImageLightbox();
+  closeForwardModal();
+  resetThreadMemoryState();
   closeBookingBridgeModal({ preserveState: false });
   state.activeThreadId = null;
   state.threadProfile = null;
@@ -2337,6 +2344,9 @@ function resetClientViewForAccountSwitch(accountId) {
     state.view = {
       ...state.view,
       activeAccountId: accountId,
+      session: { account: null, status: null },
+      labels: { items: [] },
+      aiAutomationLogs: [],
       threads: [],
       searchableThreads: [],
       contacts: [],
@@ -2346,13 +2356,7 @@ function resetClientViewForAccountSwitch(accountId) {
         unreadThreads: 0,
         unreadMessages: 0
       },
-      zalo: {
-        ...(state.view.zalo || {}),
-        recommendations: [],
-        incomingRequests: [],
-        sentRequests: [],
-        blockedUsers: []
-      }
+      zalo: {}
     };
   }
   render();
