@@ -1,29 +1,96 @@
 # Zalo User Server
 
-Bản scaffold đầu cho server Zalo cá nhân self-hosted theo mô hình multi-operator inbox.
+Self-hosted Zalo personal multi-account server dùng `zca-js`.
 
-## Mục tiêu của bản này
+## Trạng thái
 
-- Web app dễ dùng cho nhiều máy cùng truy cập
-- Danh sách hội thoại sắp theo tin mới nhất
-- Hiện avatar, user, group, người lạ, tin nhắn
-- Đồng bộ realtime trong nội bộ server qua SSE
-- Có lớp `provider` để mở rộng tiếp cho media, notes, assignment
-- Có luồng QR login/session state chạy được
+Có 2 provider:
 
-## Trạng thái hiện tại
+- `mock`
+- `zalo-web` — QR login, reconnect credentials, realtime listener, nhận/gửi text/media cơ bản.
 
-Hiện có 2 provider:
+Mặc định dùng `PROVIDER=zalo-web`.
 
-- `mock`: chạy demo/local ngay, không cần phụ thuộc ngoài
-- `zalo-web`: adapter thật mức cơ bản bằng `zca-js` cho QR login, reconnect từ credentials đã lưu, load bạn bè/nhóm cơ bản, nhận/gửi text realtime
+## Chatbot bridge sang int-chat
 
-Mặc định `.env.example` và Docker dùng `PROVIDER=zalo-web`.
+Repo này là **channel transport cho Zalo cá nhân**. AI/chatbot brain không nằm ở đây.
+
+```text
+Zalo cá nhân
+   ↓
+zca-js api.listener.on("message")
+   ↓
+ZaloWebProvider
+   ↓
+POST int-chat /webhooks/zalo
+   ↓
+ChiHome chatbot
+   ↓
+POST zl-multiaccount /api/chatbot/send
+   ↓
+ZaloWebProvider.sendMessage()
+   ↓
+zca-js api.sendMessage()
+   ↓
+Zalo cá nhân
+```
+
+Điểm quan trọng:
+
+- reuse listener `zca-js` đang chạy; **không mở listener Zalo thứ hai**;
+- chỉ forward inbound message, bỏ `isOutgoing/self` để chống loop;
+- mặc định bỏ group;
+- có thể giới hạn account nào được nối chatbot;
+- account đã bật dedicated bridge sẽ không chạy AI automation cũ của repo này để tránh 2 bot cùng trả lời;
+- outbound chatbot chỉ được gửi qua account nằm trong bridge allowlist.
+
+## Bridge env
+
+```text
+CHATBOT_WEBHOOK_URL=http://localhost:4100/webhooks/zalo
+CHATBOT_BRIDGE_SECRET=change-me-zalo-bridge
+
+# Empty = tất cả account đã login; hoặc comma-separated Zalo account IDs.
+CHATBOT_BRIDGE_ACCOUNT_IDS=
+
+CHATBOT_BRIDGE_ALLOW_GROUPS=false
+CHATBOT_BRIDGE_TIMEOUT_MS=8000
+```
+
+Shared secret phải trùng với:
+
+```text
+int-chat ZALO_BRIDGE_SECRET
+```
+
+## Dedicated chatbot send endpoint
+
+```text
+POST /api/chatbot/send
+x-chatbot-bridge-secret: <CHATBOT_BRIDGE_SECRET>
+```
+
+Body:
+
+```json
+{
+  "accountId": "ZALO_ACCOUNT_ID",
+  "threadId": "ZALO_THREAD_ID",
+  "text": "Nội dung bot trả lời"
+}
+```
+
+Endpoint này gọi existing:
+
+```text
+provider.sendMessage()
+→ ZaloWebProvider.sendMessage()
+→ api.sendMessage(message, threadId, ThreadType.User/Group)
+```
 
 ## Chạy local
 
 ```bash
-cd zalo-user-server
 cp .env.example .env
 node src/server.js
 ```
@@ -33,7 +100,6 @@ Mở: `http://localhost:4310`
 ## Docker
 
 ```bash
-cd zalo-user-server
 docker compose up -d --build
 ```
 
@@ -43,24 +109,31 @@ docker compose up -d --build
 - `GET /api/state`
 - `GET /api/events` (SSE)
 - `POST /api/sessions/qr/start`
-- `POST /api/sessions/qr/confirm` (chỉ dùng cho mock)
 - `POST /api/messages/send`
+- `POST /api/chatbot/send`
 
-## Lưu ý quan trọng
+## Test
 
-- Adapter `zalo-web` là **unofficial** nên có rủi ro logout, chặn phiên, hoặc khóa tài khoản.
-- Mình **không thêm cơ chế né phát hiện / né quét / né ban**. Hướng an toàn hơn là giảm automation, giữ thao tác giống người dùng bình thường, hạn chế spam, rate limit chặt, và ưu tiên review tay cho hành động nhạy cảm.
+```bash
+npm run check
+npm run test:chatbot-bridge
+```
 
-## Cấu trúc
+## Lưu ý Zalo
+
+`zca-js` là **unofficial Zalo Web API**. Có rủi ro logout/chặn phiên/khóa account. Không dùng cơ chế né phát hiện; hạn chế spam và automation quá mức.
+
+Theo contract của `zca-js`, listener realtime chạy bằng:
 
 ```text
-zalo-user-server/
-  public/                # UI tĩnh
-  src/
-    lib/store.js         # lưu state JSON
-    providers/
-      mock-provider.js   # provider demo
-      zalo-web-provider.js
-    server.js            # HTTP + API + SSE
-  data/                  # state/runtime
+api.listener.on("message", ...)
+api.listener.start()
 ```
+
+và gửi message bằng:
+
+```text
+api.sendMessage(..., threadId, ThreadType.User/Group)
+```
+
+Chỉ một Zalo Web listener nên không mở Zalo Web browser song song với listener production nếu điều đó làm session listener bị dừng.
