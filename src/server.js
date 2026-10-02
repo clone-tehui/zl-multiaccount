@@ -198,6 +198,11 @@ async function handleRequest(req, res) {
       if (!accountId) throw new Error('Thiếu accountId');
       if (!threadId) throw new Error('Thiếu threadId');
       if (!text) throw new Error('Tin nhắn trống');
+      if (!isChatbotBridgeAccount(accountId)) {
+        const error = new Error('Account này không được bật cho chatbot bridge');
+        error.statusCode = 403;
+        throw error;
+      }
       const message = await provider.sendMessage({ accountId, threadId, text });
       return { ok: true, message };
     });
