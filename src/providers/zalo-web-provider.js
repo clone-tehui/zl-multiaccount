@@ -3,6 +3,7 @@ import path from 'node:path';
 import { requestAccountContext, runWithAccount, withoutAccountContext } from '../services/request-account-context.js';
 import { Zalo, ThreadType, AvatarSize, LoginQRCallbackEventType } from 'zca-js';
 import { appendMessage, getAccountScopedState, replaceThreadMessages, resetChatState, switchActiveAccountState, updateAccountScopedState, upsertContact, upsertThread } from '../lib/store.js';
+import { ChatbotBridgeService } from '../services/chatbot-bridge-service.js';
 
 const LABEL_COLORS = ['#d91b1b', '#f31bc8', '#ff6905', '#fac000', '#4bc377', '#0068ff', '#7c3aed', '#0891b2'];
 const GROUP_HISTORY_SYNC_COUNT = Math.max(30, Math.min(200, Number(process.env.ZALO_GROUP_HISTORY_SYNC_COUNT || 100)));
@@ -36,6 +37,7 @@ export class ZaloWebProvider {
     this.pendingQrCredentials = null;
     this.accountSyncPromises = new Map();
     this.keepAliveFailures = new Map();
+    this.chatbotBridge = new ChatbotBridgeService();
   }
 
   get api() {
@@ -984,6 +986,9 @@ export class ZaloWebProvider {
           if (eventName !== 'typing') {
             await runWithAccount(accountId, () => this.deliverWebhookEvent(eventName, payload, accountId)).catch(() => null);
           }
+          if (eventName === 'message') {
+            await this.deliverChatbotMessageEvent(payload, accountId).catch(() => null);
+          }
         } catch (error) {
           console.error(`[zalo-user-server] ingest ${eventName} failed`, error);
         }
@@ -1802,6 +1807,63 @@ export class ZaloWebProvider {
     return { ok: true, accountId: key, deferredSync: shouldSyncInBackground };
   }
 
+  async deliverChatbotMessageEvent(payload, accountId) {
+    if (!this.chatbotBridge?.enabled) return { skipped: true };
+    const state = this.store.read();
+    const targetAccountId = String(accountId || state.activeAccountId || '').trim();
+    const account = state.accounts?.[targetAccountId] || null;
+    const accountState = getAccountScopedState(state, targetAccountId);
+    const normalized = buildRealtimeWebhookMessagePayload(state, payload, targetAccountId);
+    if (!normalized) return { skipped: true, reason: 'empty_message' };
+
+    const thread = accountState?.threads?.[String(normalized.threadId || '')] || null;
+    const sender = accountState?.contacts?.[String(normalized.senderId || '')] || null;
+    const isGroup = payload?.type === ThreadType.Group || thread?.type === 'group';
+
+    const body = {
+      event: 'message',
+      source: 'zl-multiaccount',
+      messageData: normalized,
+      account: account || null,
+      account_id: account?.id || account?.userId || targetAccountId || null,
+      recipient_account_id: account?.id || account?.userId || targetAccountId || null,
+      account_name: account?.displayName || null,
+      zalo_name: account?.displayName || null,
+      thread: thread ? {
+        id: String(thread.id || normalized.threadId || ''),
+        title: thread.title || '',
+        type: thread.type || (isGroup ? 'group' : 'direct')
+      } : {
+        id: String(normalized.threadId || ''),
+        title: '',
+        type: isGroup ? 'group' : 'direct'
+      },
+      sender: sender ? {
+        id: String(sender.id || normalized.senderId || ''),
+        displayName: sender.displayName || sender.zaloName || sender.username || '',
+        avatarUrl: sender.avatarUrl || sender.avatar || '',
+        phoneNumber: sender.phoneNumber || '',
+        username: sender.username || '',
+        zaloName: sender.zaloName || '',
+        globalId: sender.globalId || ''
+      } : {
+        id: String(normalized.senderId || ''),
+        displayName: '',
+        avatarUrl: '',
+        phoneNumber: '',
+        username: '',
+        zaloName: '',
+        globalId: ''
+      }
+    };
+
+    return this.chatbotBridge.deliver(body, {
+      accountId: targetAccountId,
+      isOutgoing: Boolean(normalized.isOutgoing),
+      isGroup
+    });
+  }
+
   async updateIntegrationConfig(config) {
     this.store.update((state) => {
       state.integration = {
@@ -2052,6 +2114,12 @@ function normalizeHistoryMessage(message, ownId) {
       msgId: message.data.msgId || null,
       cliMsgId: message.data.cliMsgId || null,
       uidFrom: message.data.uidFrom || null,
+      idTo: message.data.idTo || null,
+      dName: message.data.dName || null,
+      actionId: message.data.actionId || null,
+      realMsgId: message.data.realMsgId || null,
+      userId: message.data.userId || null,
+      uin: message.data.uin || null,
       ts: message.data.ts || null,
       msgType: message.data.msgType || null,
       ttl: message.data.ttl ?? null,
