@@ -25,6 +25,7 @@ import { normalizeAiAutomationConfig, normalizeAiAutomationDepartmentMap, normal
 import { createAiAutomationRuntime, getExecutionTrace } from './services/ai-automation-runtime.js';
 import { createAiAutomationChannelAdapter } from './services/ai-automation-channel-adapter.js';
 import { getAgentSystemDb, initializeAgentSystemDb, listAgents, seedAgentSystemFromConfig, updateAgentInstruction } from './services/agent-system-db.js';
+import { isChatbotBridgeAccount } from './services/chatbot-bridge-service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -39,6 +40,7 @@ const appVersion = process.env.APP_VERSION || detectAppVersion();
 const MAX_UPLOAD_FILE_BYTES = 25 * 1024 * 1024;
 const chiHomeBookingBridgeBaseUrl = String(process.env.CHIHOME_BOOKING_BRIDGE_URL || 'https://tehui.io.vn/bridge/zalo-booking').trim();
 const chiHomeBookingBridgeSecret = String(process.env.CHIHOME_BOOKING_BRIDGE_SECRET || '').trim();
+const chatbotBridgeSecret = String(process.env.CHATBOT_BRIDGE_SECRET || '').trim();
 const portalConfig = getPortalConfig();
 const scopedViewBodyCache = new Map();
 const SCOPED_VIEW_BODY_CACHE_LIMIT = 64;
@@ -182,6 +184,25 @@ async function handleRequest(req, res) {
   if (req.method === 'GET' && url.pathname === '/api/version') {
     return json(res, 200, { ok: true, version: appVersion });
   }
+
+  if (req.method === 'POST' && url.pathname === '/api/chatbot/send') {
+    const provided = String(req.headers['x-chatbot-bridge-secret'] || '').trim();
+    if (!chatbotBridgeSecret || !provided || !safeEqual(provided, chatbotBridgeSecret)) {
+      return json(res, 401, { ok: false, code: 'INVALID_CHATBOT_BRIDGE_SECRET', error: 'Unauthorized' });
+    }
+    const body = await readJsonBody(req);
+    return handleAction(res, async () => {
+      const accountId = String(body.accountId || '').trim();
+      const threadId = String(body.threadId || '').trim();
+      const text = String(body.text || '').trim();
+      if (!accountId) throw new Error('Thiếu accountId');
+      if (!threadId) throw new Error('Thiếu threadId');
+      if (!text) throw new Error('Tin nhắn trống');
+      const message = await provider.sendMessage({ accountId, threadId, text });
+      return { ok: true, message };
+    });
+  }
+
 
   if (req.method === 'GET' && url.pathname === '/api/agents') {
     const principal = getRequiredAuth(req);
@@ -2419,7 +2440,10 @@ function openEventStream(req, res) {
 function emitEvent(type, payload) {
   if (type === 'message.created') {
     payload = applyPortalRoutingOnIncoming(payload);
-    aiAutomationRuntime?.queueIncoming?.(payload);
+    const bridgeAccountId = String(payload?.accountId || payload?.view?.activeAccountId || store.read().activeAccountId || '').trim();
+    if (!isChatbotBridgeAccount(bridgeAccountId)) {
+      aiAutomationRuntime?.queueIncoming?.(payload);
+    }
   }
   const portalState = portalStore.read();
   const appState = store.read();
