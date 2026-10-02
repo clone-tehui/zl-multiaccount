@@ -27,6 +27,12 @@ The isolation suite uses synthetic data and an isolated mock server, never
 production Zalo sends. It tests concurrent operators, identical thread IDs,
 background ingest, persistence, SSE, scope denial and revoked operators.
 
+Run `node --test test/new-account-isolation.test.mjs` for sequential onboarding
+of four synthetic accounts, empty initial data/metadata, same-ID isolation,
+background writes to an older account and persistence after reopening the store.
+Store initialization and default merging clone templates so newly created buckets
+cannot inherit mutations from an earlier account or a fresh store instance.
+
 ## Approved legacy recovery, 2026-10-02
 
 Old data was already duplicated across buckets. Prevention alone cannot establish

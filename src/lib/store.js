@@ -348,7 +348,7 @@ export class JsonStore {
     this.revisionCounter = 0;
     fs.mkdirSync(baseDir, { recursive: true });
     if (!fs.existsSync(this.filePath)) {
-      this.write(DEFAULT_STATE);
+      this.write(structuredClone(DEFAULT_STATE));
     }
   }
 
@@ -443,9 +443,9 @@ function markStateRevision(state, revision) {
 }
 
 function mergeDefaults(value, defaults) {
-  if (Array.isArray(defaults)) return Array.isArray(value) ? value : defaults;
+  if (Array.isArray(defaults)) return Array.isArray(value) ? value : structuredClone(defaults);
   if (defaults && typeof defaults === 'object') {
-    const out = { ...defaults };
+    const out = structuredClone(defaults);
     for (const key of Object.keys(value || {})) {
       out[key] = mergeDefaults(value[key], defaults[key]);
     }
