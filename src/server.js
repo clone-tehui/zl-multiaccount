@@ -1,10 +1,13 @@
+import { requestAccountId, projectRequestAccount, validateRequestAccount } from './services/request-account-selection.js';
+import { requestAccountContext, currentRequestAccountId, runWithAccount, withoutAccountContext } from './services/request-account-context.js';
+import { diagnoseAccountIsolation } from './services/account-isolation-diagnostics.js';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import XLSX from 'xlsx';
-import { JsonStore, buildView, getStateRevision, updateAccountScopedState } from './lib/store.js';
+import { JsonStore, buildView as buildUnscopedView, getStateRevision, updateAccountScopedState } from './lib/store.js';
 import { PortalStore, getPortalStateRevision } from './lib/portal-store.js';
 import { MockProvider } from './providers/mock-provider.js';
 import { ZaloWebProvider } from './providers/zalo-web-provider.js';
@@ -88,7 +91,20 @@ const COMPAT_DOCS = buildCompatDocs();
 
 const server = http.createServer(async (req, res) => {
   try {
-    await handleRequest(req, res);
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const principal = getAuthSession(req)
+      || (['/api/compat/manager', '/get/post'].includes(url.pathname) ? getCompatApiPrincipal(req) : null)
+      || (url.pathname === '/api/chihome/resolve-thread' ? getChiHomeLookupPrincipal(req) : null);
+    if (!principal) return await handleRequest(req, res);
+    const validate = (accountId) => validateRequestAccount(accountId, principal, store.readGlobal(), portalStore.read());
+    const headerAccount = String(req.headers['x-zalo-account-id'] || '').trim();
+    const queryAccount = String(url.searchParams.get('accountId') || '').trim();
+    if (headerAccount && queryAccount && headerAccount !== queryAccount) {
+      const error = new Error('Conflicting account scope'); error.statusCode = 403; throw error;
+    }
+    const explicitAccount = queryAccount || headerAccount;
+    const accountId = explicitAccount ? validate(explicitAccount) : requestAccountId(req, principal, store.readGlobal(), portalStore.read());
+    await requestAccountContext.run({ accountId, validate, explicitAccount, principal, path: url.pathname }, () => handleRequest(req, res));
   } catch (error) {
     return writeUnhandledError(res, error);
   }
@@ -742,7 +758,10 @@ async function handleRequest(req, res) {
   }
 
   if (req.method === 'GET' && url.pathname === '/api/accounts') {
-    return json(res, 200, { ok: true, items: typeof provider.listAccounts === 'function' ? provider.listAccounts() : [] });
+    const principal = getRequiredAuth(req);
+    const accounts = Object.values(store.readGlobal().accounts || {});
+    const allowed = new Set(resolveVisibleAccountIds(accounts, principal, portalStore.read()));
+    return json(res, 200, { ok: true, items: accounts.filter((account) => allowed.has(String(account.id || account.userId))) });
   }
 
   if (url.pathname.startsWith('/api/') && !['/api/health', '/api/auth/login', '/api/auth/status', '/api/accounts'].includes(url.pathname) && !isAuthenticated(req)) {
@@ -753,12 +772,19 @@ async function handleRequest(req, res) {
     }
   }
 
+  if (req.method === 'GET' && url.pathname === '/api/admin/account-isolation/diagnostics') {
+    const principal = getRequiredAuth(req);
+    requireAdminAccess(principal);
+    return handleAction(res, async () => diagnoseAccountIsolation(provider, store.read(), principal));
+  }
+
   if (req.method === 'POST' && url.pathname === '/api/accounts/select') {
     const principal = getRequiredAuth(req);
     const body = await readJsonBody(req);
     return handleAction(res, async () => {
       assertAccountAccess(principal, body.accountId, portalStore.read(), store.read());
-      return ({ ok: true, ...(await provider.selectAccount(body.accountId, { awaitSync: body.awaitSync === true, loadHistory: body.loadHistory })) });
+      const accountId = requestAccountId(req, principal, store.read(), portalStore.read(), body.accountId);
+      return { ok: true, accountId, view: buildScopedView(projectRequestAccount(store.read(), accountId), principal, portalStore.read()) };
     });
   }
 
@@ -1287,11 +1313,13 @@ async function handleRequest(req, res) {
 
   if (req.method === 'GET' && url.pathname === '/api/state') {
     const principal = getRequiredAuth(req);
-    const state = store.read();
+    const originalState = store.read();
     const portalState = portalStore.read();
+    const selectedAccountId = currentRequestAccountId();
+    const state = projectRequestAccount(originalState, selectedAccountId);
     const requestedThreadId = String(url.searchParams.get('threadId') || '').trim();
     const payload = trimStatePayloadForRequestedThread(buildScopedView(state, principal, portalState), requestedThreadId);
-    return jsonCached(res, 200, payload, buildScopedViewBodyCacheKey(state, principal, portalState, requestedThreadId));
+    return json(res, 200, payload);
   }
 
   if (req.method === 'GET' && url.pathname === '/api/events') {
@@ -1364,7 +1392,7 @@ async function handleRequest(req, res) {
       assertThreadAccess(principal, body.threadId);
       const uploads = Array.isArray(body.attachments) ? body.attachments : [];
       const remoteUploads = await resolveCompatAttachments(Array.isArray(body.attachmentsUrls) ? body.attachmentsUrls.join(',') : (body.attachmentsUrls || ''), '');
-      const saved = writeUploadsToTempFiles([...uploads, ...remoteUploads], dataDir);
+      const saved = writeUploadsToTempFiles([...uploads, ...remoteUploads], dataDir, body.threadId);
       try {
         const message = await provider.sendMessage({
           threadId: body.threadId,
@@ -1611,6 +1639,11 @@ function createProvider(name, storeRef, emit) {
   return new MockProvider(storeRef, emit);
 }
 
+function buildView(state) {
+  const principal = requestAccountContext.getStore()?.principal;
+  return principal ? buildScopedView(state, principal, portalStore.read()) : buildUnscopedView(state);
+}
+
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) return;
   const raw = fs.readFileSync(filePath, 'utf8');
@@ -1658,7 +1691,7 @@ function buildScopedViewBodyCacheKey(state, principal, portalState, requestedThr
   const permissions = (principal?.permissions || []).map(String).sort().join(',');
   const departments = (principal?.departmentIds || []).map(String).sort().join(',');
   const identity = [String(principal?.userId || ''), String(principal?.username || ''), roles, permissions, departments].join('|');
-  return `state:${stateRevision}:${portalRevision}:${identity}:${String(requestedThreadId || '')}`;
+  return `state:${stateRevision}:${portalRevision}:${state.activeAccountId || ''}:${identity}:${String(requestedThreadId || '')}`;
 }
 
 function trimStatePayloadForRequestedThread(payload, requestedThreadId = '') {
@@ -1794,7 +1827,11 @@ function getAuthSession(req) {
     legacySessions: authSessions,
     legacyRole: 'admin'
   });
-  return enrichPrincipal(principal, portalStore.read());
+  if (!principal) return null;
+  const portalState = portalStore.read();
+  const user = (portalState.users || []).find((item) => String(item.id) === String(principal.userId) || String(item.username) === String(principal.username));
+  if (!user || user.active === false || Number(user.sessionVersion || 1) !== Number(principal.sessionVersion || 1)) return null;
+  return enrichPrincipal(principal, portalState);
 }
 
 function applyRolePermissionsConfig() {
@@ -1905,7 +1942,16 @@ async function readJsonBody(req) {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
   if (chunks.length === 0) return {};
-  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
+  const context = requestAccountContext.getStore();
+  const requested = [...new Set([body.accountId, body.credentialId, body.credential_id].filter((value) => value !== undefined && value !== null && value !== '').map(String))];
+  if (context?.validate && requested.length) {
+    if (requested.length > 1 || (context.explicitAccount && context.explicitAccount !== requested[0] && context.path !== '/api/accounts/select')) {
+      const error = new Error('Conflicting account scope'); error.statusCode = 403; throw error;
+    }
+    context.accountId = context.validate(requested[0]);
+  }
+  return body;
 }
 
 async function handleAction(res, fn) {
@@ -2206,7 +2252,7 @@ function cleanupPortalBindingsAgainstState() {
   const scopedThreadKeys = new Set();
   const threadIds = new Set();
   for (const [accountId, account] of Object.entries(appState.accounts || {})) {
-    for (const threadId of Object.keys(account?.threads || {})) {
+    for (const threadId of Object.keys(appState.accountStateById?.[accountId]?.threads || account?.threads || {})) {
       scopedThreadKeys.add(buildThreadBindingKey(threadId, accountId));
       threadIds.add(String(threadId));
     }
@@ -2262,7 +2308,10 @@ function findBindingAccountId(bindings, threadId) {
 function resolvePortalThreadBinding(portalState, threadId, accountId = null) {
   const bindings = portalState?.threadBindings || {};
   const scopedKey = buildThreadBindingKey(threadId, accountId);
-  return (scopedKey && bindings[scopedKey]) || bindings[String(threadId || '').trim()] || null;
+  const scoped = scopedKey && bindings[scopedKey];
+  if (scoped && String(scoped.accountId || accountId) === String(accountId)) return scoped;
+  const legacy = bindings[String(threadId || '').trim()];
+  return legacy && accountId && String(legacy.accountId || '') === String(accountId) ? legacy : null;
 }
 
 function findPortalChannelByAccountId(portalState, accountId) {
@@ -2395,9 +2444,10 @@ function openEventStream(req, res) {
     Connection: 'keep-alive',
     'X-Accel-Buffering': 'no'
   });
-  const client = { res, principal };
+  const accountId = currentRequestAccountId();
+  const client = { res, principal, req, accountId };
   res.write('retry: 3000\n\n');
-  res.write(`event: snapshot\ndata: ${JSON.stringify(buildScopedView(store.read(), principal, portalStore.read()))}\n\n`);
+  res.write(`event: snapshot\ndata: ${JSON.stringify(buildScopedView(projectRequestAccount(store.read(), accountId), principal, portalStore.read()))}\n\n`);
   clients.add(client);
   const heartbeat = setInterval(() => {
     try {
@@ -2417,22 +2467,30 @@ function openEventStream(req, res) {
 }
 
 function emitEvent(type, payload) {
+  const accountId = String(payload?.accountId || payload?.view?.activeAccountId || currentRequestAccountId() || store.readGlobal().activeAccountId || '');
+  return runWithAccount(accountId, () => emitAccountEvent(type, payload, accountId));
+}
+
+function emitAccountEvent(type, payload, accountId) {
   if (type === 'message.created') {
     payload = applyPortalRoutingOnIncoming(payload);
     aiAutomationRuntime?.queueIncoming?.(payload);
   }
   const portalState = portalStore.read();
-  const appState = store.read();
-  const accountId = String(payload?.accountId || payload?.view?.activeAccountId || appState.activeAccountId || '');
+  const appState = store.readGlobal();
   for (const client of clients) {
-    const view = buildScopedView(appState, client.principal, portalState);
-    const clientPayload = buildClientScopedEventPayload(payload, view);
-    if (type === 'message.created') {
-      const visibleIds = new Set((view.threads || []).map((item) => String(item.id)));
-      if (!visibleIds.has(String(payload?.threadId || payload?.message?.threadId || ''))) continue;
-      client.res.write(`event: ${type}\ndata: ${JSON.stringify({ type, accountId, payload: clientPayload, view })}\n\n`);
-      continue;
-    }
+    const principal = getAuthSession(client.req);
+    if (!principal) { client.res.end(); clients.delete(client); continue; }
+    const allowed = resolveVisibleAccountIds(Object.values(appState.accounts || {}), principal, portalState);
+    const selectedAccountId = client.accountId;
+    if (selectedAccountId && !allowed.includes(selectedAccountId)) { client.res.end(); clients.delete(client); continue; }
+    // Fence the raw payload before serialization: shared thread IDs do not imply ownership.
+    if (accountId && accountId !== selectedAccountId) continue;
+    const view = buildScopedView(projectRequestAccount(appState, selectedAccountId), principal, portalState);
+    const threadId = String(payload?.threadId || payload?.message?.threadId || '');
+    const visibleIds = new Set([...(view.threads || []), ...(view.searchableThreads || [])].map((item) => String(item.id)));
+    if (threadId && !visibleIds.has(threadId)) continue;
+    const clientPayload = hasWildAccessForPayload(principal) ? buildClientScopedEventPayload(payload, view) : { accountId, threadId: threadId || null, view };
     client.res.write(`event: ${type}\ndata: ${JSON.stringify({ type, accountId, payload: clientPayload, view })}\n\n`);
   }
 }
@@ -2873,6 +2931,13 @@ function serveUploadedFile(req, res, baseDir, fileName) {
   }
   const uploadDir = path.join(baseDir, 'tmp-uploads');
   const target = path.join(uploadDir, safeName);
+  const principal = getRequiredAuth(req);
+  const ownershipPath = `${target}.ownership.json`;
+  const ownership = fs.existsSync(ownershipPath) ? JSON.parse(fs.readFileSync(ownershipPath, 'utf8')) : null;
+  if ((ownership && ownership.accountId !== currentRequestAccountId()) || (!ownership && !hasPortalAdminAccess(principal))) {
+    return json(res, 403, { ok: false, error: 'Forbidden: tệp ngoài phạm vi account' });
+  }
+  if (ownership && !hasPortalAdminAccess(principal)) assertThreadAccess(principal, ownership.threadId);
   if (!target.startsWith(uploadDir) || !fs.existsSync(target) || fs.statSync(target).isDirectory()) {
     res.writeHead(404);
     return res.end('Not found');
@@ -2920,7 +2985,7 @@ function serveUploadedFile(req, res, baseDir, fileName) {
   return fs.createReadStream(target).pipe(res);
 }
 
-function writeUploadsToTempFiles(uploads, baseDir) {
+function writeUploadsToTempFiles(uploads, baseDir, threadId = null) {
   const uploadDir = path.join(baseDir, 'tmp-uploads');
   fs.mkdirSync(uploadDir, { recursive: true });
   const paths = [];
@@ -2935,6 +3000,7 @@ function writeUploadsToTempFiles(uploads, baseDir) {
     const storedName = `${Date.now()}-${Math.random().toString(36).slice(2)}-${name}`;
     const filePath = path.join(uploadDir, storedName);
     fs.writeFileSync(filePath, buffer);
+    fs.writeFileSync(`${filePath}.ownership.json`, JSON.stringify({ accountId: currentRequestAccountId(), threadId }));
     paths.push(filePath);
     meta.push({
       name,
@@ -2973,7 +3039,7 @@ async function handleCompatManager(body, provider) {
 
   if (operation === 'send_message' || operation === 'sendMessage') {
     const attachments = await resolveCompatAttachments(body.attachmentsUrls || body.attachments_urls || '', body.base64Attachments || body.base64_attachments || '');
-    const saved = writeUploadsToTempFiles(attachments, dataDir);
+    const saved = writeUploadsToTempFiles(attachments, dataDir, conversationId);
     try {
       return await provider.sendMessage({ threadId: conversationId, text: content, attachments: saved.paths, attachmentMeta: saved.meta, ...accountOptions });
     } finally {

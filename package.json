@@ -5,6 +5,7 @@
   "description": "Private self-hosted Zalo user server scaffold for multi-operator inbox",
   "type": "module",
   "scripts": {
+    "test:account-isolation": "node scripts/test-account-isolation.mjs",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "migrate": "node src/db/migrate.js",

@@ -1,4 +1,4 @@
-import { buildPortalSummary } from './access-service.js';
+import { buildPortalSummary, resolveVisibleAccountIds } from './access-service.js';
 import { derivePresenceStatus } from './presence-service.js';
 
 export function createPortalReadService({ db, portalStore, preferredSource = 'auto' }) {
@@ -22,7 +22,7 @@ export function createPortalReadService({ db, portalStore, preferredSource = 'au
       const portalState = portalStore.read();
       const context = buildVisibilityContext(principal, portalState);
       const jsonResult = buildJsonCatalog(context);
-      if (preferredSource === 'json' || !db?.enabled) {
+      if (!context.canReadAll || preferredSource === 'json' || !db?.enabled) {
         markSuccess('catalog', 'json');
         return jsonResult;
       }
@@ -47,7 +47,7 @@ export function createPortalReadService({ db, portalStore, preferredSource = 'au
       const portalState = portalStore.read();
       const context = buildVisibilityContext(principal, portalState);
       const jsonResult = buildJsonOpsOverview(context);
-      if (preferredSource === 'json' || !db?.enabled) {
+      if (!context.canReadAll || preferredSource === 'json' || !db?.enabled) {
         markSuccess('ops', 'json');
         return jsonResult;
       }
@@ -72,7 +72,7 @@ export function createPortalReadService({ db, portalStore, preferredSource = 'au
       const portalState = portalStore.read();
       const context = buildVisibilityContext(principal, portalState);
       const jsonResult = buildJsonActivity(context, options.limit || 50);
-      if (preferredSource === 'json' || !db?.enabled) {
+      if (!context.canReadAll || preferredSource === 'json' || !db?.enabled) {
         markSuccess('activity', 'json');
         return jsonResult;
       }
@@ -111,13 +111,14 @@ export function createPortalReadService({ db, portalStore, preferredSource = 'au
 }
 
 function buildVisibilityContext(principal, portalState) {
-  const canReadAll = (principal.permissions || []).includes('*');
+  const canReadAll = (principal.permissions || []).includes('*') || (principal.roles || []).includes('admin');
   const visibleDeptIds = new Set(
     canReadAll
       ? (portalState.departments || []).map((item) => String(item.id))
       : (principal.departmentIds || []).map(String)
   );
-  return { principal, portalState, canReadAll, visibleDeptIds };
+  const visibleAccountIds = new Set(resolveVisibleAccountIds([], principal, portalState));
+  return { principal, portalState, canReadAll, visibleDeptIds, visibleAccountIds };
 }
 
 function buildJsonCatalog(context) {
@@ -272,7 +273,7 @@ function hasMeaningfulCatalogData(result) {
 }
 
 function buildJsonOpsOverview(context) {
-  const bindings = Object.values(context.portalState.threadBindings || {}).filter((item) => !item.departmentId || context.visibleDeptIds.has(String(item.departmentId)));
+  const bindings = Object.values(filterThreadBindings(context));
   const users = (context.portalState.users || []).filter((item) => (item.departmentIds || []).some((deptId) => context.visibleDeptIds.has(String(deptId))));
   return {
     ok: true,
@@ -376,7 +377,8 @@ function buildJsonActivity(context, limit) {
     ok: true,
     source: 'json',
     items: (context.portalState.recentActivity || [])
-      .filter((item) => !item.departmentId || context.visibleDeptIds.has(String(item.departmentId)))
+      .filter((item) => context.canReadAll || (context.visibleAccountIds.has(String(item.accountId || item.payload?.accountId || '')) && context.visibleDeptIds.has(String(item.departmentId || ''))))
+      .map((item) => context.canReadAll ? item : { action: item.action, accountId: item.accountId || item.payload?.accountId, departmentId: item.departmentId, createdAt: item.createdAt })
       .slice(0, limit)
   };
 }
@@ -412,6 +414,7 @@ function filterThreadBindings(context) {
   const principalUserId = String(context.principal?.userId || context.principal?.username || '');
   const entries = Object.entries(context.portalState.threadBindings || {}).filter(([, binding]) => {
     if (context.canReadAll) return true;
+    if (!context.visibleAccountIds.has(String(binding.accountId || ''))) return false;
     if ((context.principal?.roles || []).includes('manager')) return binding.departmentId && context.visibleDeptIds.has(String(binding.departmentId));
     if ((context.principal?.roles || []).includes('staff')) return String(binding.assignedUserId || '') === principalUserId;
     return false;
@@ -421,6 +424,7 @@ function filterThreadBindings(context) {
 
 function maskThreadBinding(binding) {
   return {
+    accountId: binding.accountId || null,
     threadId: binding.threadId,
     departmentId: binding.departmentId || null,
     channelId: binding.channelId || null,

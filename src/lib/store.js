@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { requestAccountContext } from '../services/request-account-context.js';
 import { normalizeAiAutomationConfig, normalizeAiAutomationDepartmentMap } from '../services/ai-automation-service.js';
 import { buildDefaultAiAutomationUsage, normalizeAiAutomationUsage } from '../services/ai-automation-openrouter.js';
 
@@ -352,6 +353,12 @@ export class JsonStore {
   }
 
   read() {
+    const state = this.readGlobal();
+    const context = requestAccountContext.getStore();
+    return context ? projectAccountState(state, context.accountId) : state;
+  }
+
+  readGlobal() {
     try {
       const stat = fs.statSync(this.filePath);
       const statKey = `${stat.mtimeMs}:${stat.size}`;
@@ -388,10 +395,36 @@ export class JsonStore {
   }
 
   update(mutator) {
-    const state = this.read();
-    const nextState = mutator(state) || state;
-    return this.write(nextState);
+    const context = requestAccountContext.getStore();
+    const state = this.readGlobal();
+    if (!context) return this.write(mutator(state) || state);
+    const accountId = String(context.accountId || '');
+    const projected = projectAccountState(state, accountId);
+    const next = mutator(projected) || projected;
+    if (String(next.activeAccountId || '') !== accountId) {
+      throw new Error('Account-scoped writes cannot change the global selection');
+    }
+    for (const key of Object.keys(next)) {
+      if (!ACCOUNT_STATE_KEYS.includes(key) && key !== 'activeAccountId') state[key] = next[key];
+    }
+    if (accountId && state.accounts?.[accountId]) {
+      state.accountStateById[accountId] = buildAccountSnapshotFromGlobal(next, accountId);
+    }
+    applyAccountSnapshotToGlobal(state, getAccountScopedState(state, state.activeAccountId) || createEmptyAccountState());
+    this.write(state);
+    return projectAccountState(state, accountId);
   }
+}
+
+const ACCOUNT_STATE_KEYS = ['contacts', 'threads', 'messages', 'labels', 'zalo', 'session'];
+
+export function projectAccountState(state, accountId) {
+  const key = String(accountId || '');
+  const bucket = getAccountScopedState(state, key) || createEmptyAccountState();
+  const projected = { ...state, ...bucket, activeAccountId: key || null };
+  projected.session = { provider: state.session?.provider, ...bucket.session };
+  markStateRevision(projected, getStateRevision(state));
+  return projected;
 }
 
 export function getStateRevision(state) {
@@ -772,7 +805,10 @@ export function updateAccountScopedState(state, accountId, mutator) {
   const key = String(accountId || state?.activeAccountId || '').trim();
   if (!key) return null;
   const storedSnapshot = getAccountScopedState(state, key);
-  const snapshot = storedSnapshot || (key === String(state.activeAccountId || '')
+  // A changed activeAccountId does not establish ownership of the global view.
+  // Preserve legacy global-only history only when its session identifies this account.
+  const globalOwnerId = String(state.session?.account?.id || '').trim();
+  const snapshot = storedSnapshot || (key === String(state.activeAccountId || '') && globalOwnerId === key
     ? buildAccountSnapshotFromGlobal(state, key)
     : createEmptyAccountState());
 
@@ -788,7 +824,7 @@ export function updateAccountScopedState(state, accountId, mutator) {
 }
 
 export function getAccountScopedState(state, accountId = null) {
-  const key = String(accountId || state?.activeAccountId || '').trim();
+  const key = String(accountId === null ? state?.activeAccountId || '' : accountId).trim();
   if (!key) return null;
   const snapshot = state?.accountStateById?.[key];
   if (!snapshot || typeof snapshot !== 'object') return null;
@@ -804,7 +840,7 @@ export function switchActiveAccountState(state, accountId) {
   if (!key) return null;
   state.accountStateById = state.accountStateById || {};
   const previousKey = String(state.activeAccountId || '').trim();
-  if (previousKey && previousKey !== key) {
+  if (previousKey && previousKey !== key && String(state.session?.account?.id || '') === previousKey) {
     state.accountStateById[previousKey] = buildAccountSnapshotFromGlobal(state, previousKey);
   }
   const snapshot = getAccountScopedState(state, key) || createEmptyAccountState();
@@ -817,6 +853,7 @@ function persistActiveAccountSnapshot(state) {
   if (!state || typeof state !== 'object') return;
   const accountId = String(state.activeAccountId || '').trim();
   if (!accountId) return;
+  if (String(state.session?.account?.id || '') !== accountId) return;
   state.accountStateById = state.accountStateById || {};
   state.accountStateById[accountId] = buildAccountSnapshotFromGlobal(state, accountId, { updatedAt: new Date().toISOString() });
 }

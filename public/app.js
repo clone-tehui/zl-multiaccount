@@ -700,8 +700,10 @@ async function logout() {
 
 async function reloadState() {
   saveComposerDraft();
+  const requestedAccountId = String(state.view?.activeAccountId || '');
   const previousActiveThreadId = state.activeThreadId;
   const data = await getJson('/api/state');
+  if (requestedAccountId !== String(state.view?.activeAccountId || '')) return;
   state.view = data;
   await loadRbacCatalog();
   hideAppNotice();
@@ -725,7 +727,7 @@ function connectEvents() {
   if (state.eventSource || !state.authenticated) return;
   clearTimeout(state.realtimeReconnectTimer);
   state.realtimeReconnectTimer = null;
-  state.eventSource = new EventSource('/api/events');
+  state.eventSource = new EventSource(`/api/events?accountId=${encodeURIComponent(state.view?.activeAccountId || '')}`);
   state.eventSource.onopen = () => {
     state.realtimeConnected = true;
     state.realtimeFailureCount = 0;
@@ -2303,7 +2305,7 @@ async function handleAccountSelect() {
     connectEvents();
     hideAppNotice();
   } catch (error) {
-    if (previousValue) els.accountSelect.value = previousValue;
+    if (previousValue) { els.accountSelect.value = previousValue; resetClientViewForAccountSwitch(previousValue); }
     await reloadState().catch(() => null);
     connectEvents();
     showAppNotice(error.message || 'Không chuyển được account.', 'danger');
@@ -2315,6 +2317,14 @@ async function handleAccountSelect() {
 
 function resetClientViewForAccountSwitch(accountId) {
   saveComposerDraft();
+  clearTimeout(state.integratedSearch.timer);
+  state.integratedSearch.seq += 1;
+  state.integratedSearch.remoteItems = [];
+  state.integratedSearch.query = '';
+  state.integratedSearch.loading = false;
+  els.threadSearch.value = '';
+  els.friendSearchResults.textContent = '';
+  els.threadProfileModal.classList.add('hidden');
   closeBookingBridgeModal({ preserveState: false });
   state.activeThreadId = null;
   state.threadProfile = null;
@@ -2328,6 +2338,7 @@ function resetClientViewForAccountSwitch(accountId) {
       ...state.view,
       activeAccountId: accountId,
       threads: [],
+      searchableThreads: [],
       contacts: [],
       stats: {
         ...(state.view.stats || {}),
@@ -4874,11 +4885,14 @@ async function post(url, body = {}, behavior = {}) {
 
 async function fetchJson(url, options = {}, behavior = {}) {
   const { silentNotice = false, timeoutMs = REQUEST_TIMEOUT_MS } = behavior;
+  const requestAccountId = String(state.view?.activeAccountId || '');
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(new Error('timeout')), timeoutMs);
   let res;
   try {
-    res = await fetch(url, { ...options, signal: controller.signal });
+    const accountId = String(state.view?.activeAccountId || '');
+    const headers = { ...options.headers, ...(accountId ? { 'X-Zalo-Account-Id': accountId } : {}) };
+    res = await fetch(url, { ...options, headers, signal: controller.signal });
   } catch (error) {
     if (!silentNotice) {
       const timeout = error?.name === 'AbortError';
@@ -4891,6 +4905,11 @@ async function fetchJson(url, options = {}, behavior = {}) {
     clearTimeout(timer);
   }
   const data = await res.json().catch(() => ({}));
+  if (requestAccountId !== String(state.view?.activeAccountId || '') && !url.startsWith('/api/auth/')) {
+    const error = new Error('Đã chuyển account; bỏ phản hồi của account trước.');
+    error.name = 'AbortError';
+    throw error;
+  }
   if (res.status === 401) {
     if (!silentNotice) showAppNotice('Phiên đăng nhập đã hết hạn hoặc server vừa cập nhật. Vui lòng tải lại trang.', 'danger');
     throw new Error(data.error || 'Unauthorized');

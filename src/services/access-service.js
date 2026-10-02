@@ -40,14 +40,18 @@ export function buildScopedView(state, principal, portalState) {
   }
 
   const visibleAccountIds = new Set(resolveVisibleAccountIds(base.accounts || [], principal, portalState));
-  const accountScopeEnabled = visibleAccountIds.size > 0;
+  const accountScopeEnabled = true;
   const accounts = accountScopeEnabled
     ? (base.accounts || []).filter((item) => visibleAccountIds.has(String(item.id || item.userId || '')))
     : (base.accounts || []);
-  if (accountScopeEnabled && activeAccountId && !visibleAccountIds.has(activeAccountId)) {
+  if (!visibleAccountIds.size || !activeAccountId || !visibleAccountIds.has(activeAccountId)) {
     const result = {
-      ...base,
+      activeAccountId: null,
       accounts,
+      session: { status: null, account: null, syncInfo: null, qrCode: null, qrImage: null, error: null },
+      labels: { items: [], version: 0, lastUpdateTime: 0 },
+      zalo: {},
+      searchableThreads: [],
       threads: [],
       contacts: [],
       stats: { threadCount: 0, unreadThreads: 0, unreadMessages: 0 },
@@ -59,7 +63,7 @@ export function buildScopedView(state, principal, portalState) {
 
   const isManager = (principal?.roles || []).includes('manager');
   const threadUniverse = [...(base.threads || []), ...(base.searchableThreads || [])];
-  const visibleThreadIds = isManager ? null : new Set(resolveVisibleThreadIds(threadUniverse, principal, portalState));
+  const visibleThreadIds = isManager ? null : new Set(resolveVisibleThreadIds(threadUniverse, principal, portalState, activeAccountId));
   const threads = (isManager ? base.threads : base.threads.filter((thread) => visibleThreadIds.has(String(thread.id))))
     .map((thread) => decorateThread(thread, portalState, activeAccountId));
   const searchableThreads = (isManager ? (base.searchableThreads || []) : (base.searchableThreads || []).filter((thread) => visibleThreadIds.has(String(thread.id))))
@@ -67,7 +71,10 @@ export function buildScopedView(state, principal, portalState) {
   const contactIds = new Set(threads.flatMap((thread) => (thread.participants || []).map((item) => String(item.id))));
   const contacts = (base.contacts || []).filter((item) => contactIds.has(String(item.id)));
   const result = {
-    ...base,
+    activeAccountId: base.activeAccountId,
+    session: { status: base.session?.status, account: base.session?.account, provider: base.session?.provider },
+    labels: base.labels,
+    zalo: {},
     accounts,
     threads,
     searchableThreads,
@@ -91,7 +98,7 @@ function buildScopedViewCacheKey(state, principal, portalState) {
   const permissions = (principal?.permissions || []).map(String).sort().join(',');
   const departments = (principal?.departmentIds || []).map(String).sort().join(',');
   const identity = [String(principal?.userId || ''), String(principal?.username || ''), roles, permissions, departments].join('|');
-  return `${stateRevision}:${portalRevision}:${identity}`;
+  return `${stateRevision}:${portalRevision}:${state.activeAccountId || ''}:${identity}`;
 }
 
 function cacheScopedView(key, value) {
@@ -124,11 +131,11 @@ export function buildPortalSummary(principal, portalState) {
       : departments.filter((item) => (principal?.departmentIds || []).map(String).includes(String(item.id))),
     channels: hasWildAccess(principal)
       ? channels.map(maskChannelSecrets)
-      : channels.filter((item) => (principal?.departmentIds || []).map(String).includes(String(item.departmentId))).map(maskChannelSecrets)
+      : channels.filter((item) => resolveVisibleAccountIds([], principal, { ...portalState, channels: [item] }).length > 0).map(maskChannelSecrets)
   };
 }
 
-export function resolveVisibleThreadIds(threads, principal, portalState) {
+export function resolveVisibleThreadIds(threads, principal, portalState, accountId = null) {
   if (hasWildAccess(principal)) return threads.map((thread) => String(thread.id));
   const bindings = portalState?.threadBindings || {};
   const allowedDepartments = new Set((principal?.departmentIds || []).map(String));
@@ -137,7 +144,7 @@ export function resolveVisibleThreadIds(threads, principal, portalState) {
   const isStaff = (principal?.roles || []).includes('staff');
 
   return threads.filter((thread) => {
-    const binding = bindings[String(thread.id)] || {};
+    const binding = resolveThreadBinding(portalState, thread.id, thread.accountId || accountId) || {};
     const departmentId = String(binding.departmentId || '');
     if (!departmentId || !allowedDepartments.has(departmentId)) return false;
     if (isManager) return true;
@@ -170,15 +177,8 @@ export function resolveVisibleAccountIds(accounts, principal, portalState) {
     }
     const members = Array.isArray(channel?.members) ? channel.members : [];
     const memberIds = new Set(members.map((item) => typeof item === 'object' && item ? String(item.userId || item.id || item.username || '') : String(item || '')).filter(Boolean));
-    if (memberIds.size && ![...allowedUserIds].some((id) => memberIds.has(id))) continue;
+    if (!memberIds.size || ![...allowedUserIds].some((id) => memberIds.has(id))) continue;
     visible.add(accountId);
-  }
-  if (isManager && !isStaff) {
-    for (const account of accounts || []) {
-      const accountId = String(account?.id || account?.userId || '').trim();
-      if (!accountId || channelsByAccountId.has(accountId)) continue;
-      visible.add(accountId);
-    }
   }
   return [...visible];
 }
@@ -200,7 +200,10 @@ export function decorateThread(thread, portalState, accountId = null) {
 function resolveThreadBinding(portalState, threadId, accountId = null) {
   const bindings = portalState?.threadBindings || {};
   const scopedKey = accountId ? `${String(accountId)}:${String(threadId)}` : '';
-  return (scopedKey && bindings[scopedKey]) || bindings[String(threadId)] || null;
+  const scoped = scopedKey && bindings[scopedKey];
+  if (scoped && String(scoped.accountId || accountId) === String(accountId)) return scoped;
+  const legacy = bindings[String(threadId)];
+  return legacy && accountId && String(legacy.accountId || '') === String(accountId) ? legacy : null;
 }
 
 function findChannelByAccountId(portalState, accountId) {

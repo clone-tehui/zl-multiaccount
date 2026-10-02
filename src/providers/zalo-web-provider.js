@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { requestAccountContext, runWithAccount, withoutAccountContext } from '../services/request-account-context.js';
 import { Zalo, ThreadType, AvatarSize, LoginQRCallbackEventType } from 'zca-js';
 import { appendMessage, getAccountScopedState, replaceThreadMessages, resetChatState, switchActiveAccountState, updateAccountScopedState, upsertContact, upsertThread } from '../lib/store.js';
 
@@ -39,7 +40,7 @@ export class ZaloWebProvider {
 
   get api() {
     const activeKey = String(this.store?.read?.().activeAccountId || '').trim();
-    return (activeKey ? this.accountClients?.get(activeKey)?.api : null) || this.activeApi || null;
+    return activeKey ? this.accountClients?.get(activeKey)?.api || null : null;
   }
 
   set api(value) {
@@ -54,7 +55,7 @@ export class ZaloWebProvider {
     const key = String(accountId || '').trim();
     if (key) return this.accountClients.get(key)?.api || null;
     const activeKey = String(this.store.read().activeAccountId || '').trim();
-    return (activeKey ? this.accountClients.get(activeKey)?.api : null) || this.api;
+    return activeKey ? this.accountClients.get(activeKey)?.api || null : null;
   }
 
   updateAccountState(accountId, mutator) {
@@ -72,7 +73,7 @@ export class ZaloWebProvider {
     if (!key) return Promise.resolve(null);
     const existing = this.accountSyncPromises.get(key);
     if (existing) return existing;
-    const task = this.syncAllData({ ...options, accountId: key })
+    const task = runWithAccount(key, () => this.syncAllData({ ...options, accountId: key }))
       .catch((error) => {
         console.error('[zalo-user-server] background sync failed', key, error?.message || error);
         this.store.update((state) => {
@@ -188,6 +189,7 @@ export class ZaloWebProvider {
   }
 
   startQrLogin(options = {}) {
+    if (requestAccountContext.getStore()) return withoutAccountContext(() => this.startQrLogin(options));
     if (this.loginPromise) {
       const current = this.store.read().session || {};
       const retryable = ['qr_declined', 'qr_expired'].includes(current.status);
@@ -539,7 +541,7 @@ export class ZaloWebProvider {
       if (draft.threads[threadId]) draft.threads[threadId].unreadCount = 0;
       return draft;
     });
-    if (isActive) this.emit('message.created', { accountId, threadId, message, view: nextState });
+    this.emit('message.created', { accountId, threadId, message, view: nextState });
     return message;
   }
 
@@ -978,9 +980,9 @@ export class ZaloWebProvider {
     const bind = (eventName, handler) => {
       api.listener.on(eventName, async (payload) => {
         try {
-          await handler.call(this, payload, accountId);
+          await runWithAccount(accountId, () => handler.call(this, payload, accountId));
           if (eventName !== 'typing') {
-            await this.deliverWebhookEvent(eventName, payload, accountId).catch(() => null);
+            await runWithAccount(accountId, () => this.deliverWebhookEvent(eventName, payload, accountId)).catch(() => null);
           }
         } catch (error) {
           console.error(`[zalo-user-server] ingest ${eventName} failed`, error);
@@ -1080,6 +1082,7 @@ export class ZaloWebProvider {
   }
 
   async afterLogin(api, accountIdHint = null, options = {}) {
+    if (requestAccountContext.getStore()) return withoutAccountContext(() => this.afterLogin(api, accountIdHint, options));
     const accountInfo = await api.fetchAccountInfo();
     const resolvedAccountId = String(accountInfo?.profile?.userId || accountIdHint || `acc-${Date.now()}`);
     const displayName = accountInfo?.profile?.displayName || accountInfo?.profile?.zaloName || resolvedAccountId;
@@ -1103,7 +1106,13 @@ export class ZaloWebProvider {
       this.saveAccountCredentials(resolvedAccountId, options.credentials);
     }
     const applyUi = options.syncUi !== false;
-    if (applyUi) this.api = api;
+    if (applyUi) {
+      this.api = api;
+      this.store.update((state) => {
+        switchActiveAccountState(state, resolvedAccountId);
+        return state;
+      });
+    }
     await this.syncAllData({ loadHistory: options.loadHistory !== false, accountId: resolvedAccountId, applyUi, preloadedAccountInfo: accountInfo });
     if (applyUi) this.emit('session.updated', this.store.read().session);
     this.attachRealtime(resolvedAccountId, api);
@@ -1359,7 +1368,8 @@ export class ZaloWebProvider {
         error: null,
         updatedAt: new Date().toISOString()
       };
-      if (applyUi) state.activeAccountId = targetAccountId;
+      // Selection happens explicitly in selectAccount/afterLogin, never on async
+      // sync completion: an older account sync must not override a newer selection.
       updateAccountScopedState(state, targetAccountId, (snapshot) => populateSyncedState(snapshot, snapshot || previousAccountState));
       return state;
     });
@@ -1378,7 +1388,7 @@ export class ZaloWebProvider {
         removeMessagesByRefs(draft, threadId, deleteRefs);
         return draft;
       });
-      if (isActive) this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'message_delete', refs: deleteRefs, view: nextState });
+      this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'message_delete', refs: deleteRefs, view: nextState });
       return;
     }
     const normalizedContent = normalizeMessagePayload(message.data.content, message.data.msgType);
@@ -1419,7 +1429,7 @@ export class ZaloWebProvider {
       appendMessage(draft, payload);
       return draft;
     });
-    if (isActive) this.emit('message.created', { accountId: targetAccountId, threadId, message: payload, view: nextState });
+    this.emit('message.created', { accountId: targetAccountId, threadId, message: payload, view: nextState });
   }
 
   async ingestReaction(reaction, accountId = null) {
@@ -1446,7 +1456,7 @@ export class ZaloWebProvider {
       applyReactionToDraft(draft, threadId, found.id, reactionPayload);
       return draft;
     });
-    if (isActive) this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'reaction', messageId: matchedMessageId, reaction: reactionPayload, view: nextState });
+    if (matchedMessageId) this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'reaction', messageId: matchedMessageId, reaction: reactionPayload, view: nextState });
   }
 
   async ingestUndoEvent(event, accountId = null) {
@@ -1468,7 +1478,7 @@ export class ZaloWebProvider {
       found.raw = { ...(found.raw || {}), undo: event.data || event };
       return draft;
     });
-    if (isActive && matchedMessageId) this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'undo', messageId: matchedMessageId, view: nextState });
+    if (matchedMessageId) this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'undo', messageId: matchedMessageId, view: nextState });
   }
 
   async ingestGroupEvent(event, accountId = null) {
@@ -1477,7 +1487,7 @@ export class ZaloWebProvider {
     const threadId = normalizeThreadId(event.threadId || event?.data?.groupId || event?.data?.group_id || '');
     if (!threadId) return;
     const result = await this.refreshGroupThreadMetadata(threadId, targetAccountId, event).catch(() => null);
-    if (result?.isActive) this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'group', eventType: event.type || event.act || '', view: result.nextState });
+    if (result) this.emit('thread.meta_updated', { accountId: targetAccountId, threadId, kind: 'group', eventType: event.type || event.act || '', view: result.nextState });
   }
 
   async ingestFriendEvent(event, accountId = null) {
@@ -1544,7 +1554,7 @@ export class ZaloWebProvider {
       return draft;
     });
 
-    if (isActive) this.emit('thread.meta_updated', { accountId: targetAccountId, kind: 'friend', userId: counterpartId, eventType: type, view: nextState });
+    this.emit('thread.meta_updated', { accountId: targetAccountId, kind: 'friend', userId: counterpartId, eventType: type, view: nextState });
   }
 
   async refreshGroupThreadMetadata(threadId, accountId = null, event = null) {
@@ -1685,6 +1695,7 @@ export class ZaloWebProvider {
   }
 
   async logoutAccount(accountId) {
+    if (requestAccountContext.getStore()) return withoutAccountContext(() => this.logoutAccount(accountId));
     const key = String(accountId || this.store.read().activeAccountId || '').trim();
     if (!key) throw new Error('Thiếu accountId');
     const client = this.accountClients.get(key);
@@ -1757,6 +1768,7 @@ export class ZaloWebProvider {
   }
 
   async selectAccount(accountId, options = {}) {
+    if (requestAccountContext.getStore()) return withoutAccountContext(() => this.selectAccount(accountId, options));
     const key = String(accountId || '').trim();
     if (!key) throw new Error('Thiếu accountId');
     const client = this.accountClients.get(key);
