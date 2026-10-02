@@ -13,6 +13,16 @@ Mặc định dùng `PROVIDER=zalo-web`.
 
 ## Chatbot bridge sang int-chat
 
+Identity invariant của bridge:
+
+```text
+recipient_account_id = Zalo account đang login và nhận tin
+sender/customer id    = messageData.senderId
+direct conversation   = messageData.threadId
+```
+
+`recipient_account_id` được gửi explicit để int-chat dùng Zalo account nhận tin làm namespace đầu tiên.
+
 Repo này là **channel transport cho Zalo cá nhân**. AI/chatbot brain không nằm ở đây.
 
 ```text
@@ -137,3 +147,46 @@ api.sendMessage(..., threadId, ThreadType.User/Group)
 ```
 
 Chỉ một Zalo Web listener nên không mở Zalo Web browser song song với listener production nếu điều đó làm session listener bị dừng.
+
+
+### Payload identity/provenance
+
+Dedicated chatbot webhook hiện gửi:
+
+```text
+recipient_account_id
+account_id
+account
+thread
+sender
+messageData
+```
+
+`sender` có thể gồm:
+- id;
+- displayName;
+- avatarUrl;
+- phoneNumber;
+- username;
+- zaloName;
+- globalId.
+
+`messageData.raw` giữ provenance từ `zca-js`:
+- msgId;
+- cliMsgId;
+- uidFrom;
+- idTo;
+- dName;
+- actionId;
+- realMsgId;
+- userId;
+- uin;
+- ts;
+- msgType;
+- ttl;
+- propertyExt;
+- content;
+- quote;
+- mentions.
+
+Phone từ sender profile chỉ là **secondary identity hint**. int-chat không merge customer bằng tên.
