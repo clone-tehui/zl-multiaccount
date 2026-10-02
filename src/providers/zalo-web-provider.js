@@ -1829,11 +1829,19 @@ export class ZaloWebProvider {
       sender: sender ? {
         id: String(sender.id || normalized.senderId || ''),
         displayName: sender.displayName || sender.zaloName || sender.username || '',
-        avatarUrl: sender.avatarUrl || sender.avatar || ''
+        avatarUrl: sender.avatarUrl || sender.avatar || '',
+        phoneNumber: sender.phoneNumber || '',
+        username: sender.username || '',
+        zaloName: sender.zaloName || '',
+        globalId: sender.globalId || ''
       } : {
         id: String(normalized.senderId || ''),
         displayName: '',
-        avatarUrl: ''
+        avatarUrl: '',
+        phoneNumber: '',
+        username: '',
+        zaloName: '',
+        globalId: ''
       }
     };
 
