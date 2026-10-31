@@ -1,0 +1,25 @@
+{
+  "name": "Zalo User Server",
+  "short_name": "Zalo User",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0a4f8f",
+  "icons": [
+    {
+      "src": "/favicon-64.png?v=20260516m",
+      "sizes": "64x64",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon-512.png?v=20260516m",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/favicon.svg?v=20260516m",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

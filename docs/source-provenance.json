@@ -1,0 +1,755 @@
+{
+  "source_date": "2026-10-31",
+  "base_files": [
+    {
+      "path": ".env.example",
+      "sha256": "993869a78d705d9fa7a8e396f21e7477eaa3ae4ce4edab4f89d2524051ca8545",
+      "upstream_candidate_sha256": "95d5c324a214191f71dcaadbfb0ce5472dc72dbc40577bd8c374910e31d0e1c6",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": true
+    },
+    {
+      "path": ".github/workflows/chatbot-bridge-check.yml",
+      "sha256": "da9b9ec95f9f07fe2b71c692d9d3dc641dd0a81e6f1c45382ca24703bf703e4a",
+      "upstream_candidate_sha256": "da9b9ec95f9f07fe2b71c692d9d3dc641dd0a81e6f1c45382ca24703bf703e4a",
+      "origin": "Existing GitHub main 4da31d72; supplemental file absent from VPS snapshot",
+      "sanitized": false
+    },
+    {
+      "path": ".gitignore",
+      "sha256": "9653c2de132343dedeeba65d32f586ad8acfb5b11f1c56231fa6dc5b54ce2e98",
+      "upstream_candidate_sha256": "9653c2de132343dedeeba65d32f586ad8acfb5b11f1c56231fa6dc5b54ce2e98",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "Dockerfile",
+      "sha256": "5ba0325a63190e388818eb15c547bd6ea371fff2e02923300c8062f063eb1802",
+      "upstream_candidate_sha256": "5ba0325a63190e388818eb15c547bd6ea371fff2e02923300c8062f063eb1802",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "README.md",
+      "sha256": "d4ac8935bfcfa80859bba6f6f830602f8bd304e0854a2a0a526fd1a1f507dc5b",
+      "upstream_candidate_sha256": "d4ac8935bfcfa80859bba6f6f830602f8bd304e0854a2a0a526fd1a1f507dc5b",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "deploy/nginx.zl.tehui.io.vn.conf",
+      "sha256": "14495acc3ebedaea8ed6e724a8ef7ef66aa61f07120aada5bb121319af7df656",
+      "upstream_candidate_sha256": "14495acc3ebedaea8ed6e724a8ef7ef66aa61f07120aada5bb121319af7df656",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docker-compose.yml",
+      "sha256": "236eb3a8d327909067ee817de2659d224f4d9c769b3d4fe27dd810be9c86da29",
+      "upstream_candidate_sha256": "236eb3a8d327909067ee817de2659d224f4d9c769b3d4fe27dd810be9c86da29",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/AI_AUTOREPLY_ARCHITECTURE.md",
+      "sha256": "91131a8ce173b67904111b2032c95b2c3266b76a30ccf3ed5db3473e8a8d129c",
+      "upstream_candidate_sha256": "91131a8ce173b67904111b2032c95b2c3266b76a30ccf3ed5db3473e8a8d129c",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "sha256": "2b704340a3fdb61256826d4de04bbc0f9c0b0edd608ed6ea2c2ee5abfac5b955",
+      "upstream_candidate_sha256": "2b704340a3fdb61256826d4de04bbc0f9c0b0edd608ed6ea2c2ee5abfac5b955",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/HANDOFF.md",
+      "sha256": "41ee637975c2fd3400b2ae3db350f33c13e0a2e05ba3bb84a78cc58f448fff70",
+      "upstream_candidate_sha256": "41ee637975c2fd3400b2ae3db350f33c13e0a2e05ba3bb84a78cc58f448fff70",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/PORTAL_OMNICHANNEL_PLAN.md",
+      "sha256": "33511bede182ba536548485987136ceb00ad5fc53f06b405a61bf6eac23d03f9",
+      "upstream_candidate_sha256": "33511bede182ba536548485987136ceb00ad5fc53f06b405a61bf6eac23d03f9",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/account-isolation.md",
+      "sha256": "339d574fb25c9bbabf11abec8fa15f3c18387179e2f20ee4f2aa1cdf56d1f4cb",
+      "upstream_candidate_sha256": "339d574fb25c9bbabf11abec8fa15f3c18387179e2f20ee4f2aa1cdf56d1f4cb",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/backup-restore.md",
+      "sha256": "cab9d58e527e99a9572b97d1b1b59beee77dd781359900e07bc830c3188ebe43",
+      "upstream_candidate_sha256": "cab9d58e527e99a9572b97d1b1b59beee77dd781359900e07bc830c3188ebe43",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/calls-drive-20261031.md",
+      "sha256": "fe8e7662d6d8bb08136228b4d8bf082d834d5f14fb69f7a24a89a28a4aac829b",
+      "upstream_candidate_sha256": "fe8e7662d6d8bb08136228b4d8bf082d834d5f14fb69f7a24a89a28a4aac829b",
+      "origin": "Supplemental local test/documentation; not claimed deployed",
+      "sanitized": false
+    },
+    {
+      "path": "docs/n8n-compat.md",
+      "sha256": "1c908022b666fd76defcaa6a78ad25476fa94344c4c052634415d921c38e745c",
+      "upstream_candidate_sha256": "1c908022b666fd76defcaa6a78ad25476fa94344c4c052634415d921c38e745c",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "docs/workspace-ui-and-zca-2.2.md",
+      "sha256": "0983e9daaa30370c664480ffa71a1b37fae8955527fd47c96f9d79517ae26895",
+      "upstream_candidate_sha256": "0983e9daaa30370c664480ffa71a1b37fae8955527fd47c96f9d79517ae26895",
+      "origin": "Supplemental local test/documentation; not claimed deployed",
+      "sanitized": false
+    },
+    {
+      "path": "docs/zca-qr-voice-calls.md",
+      "sha256": "02a02dda8b29a06702c15567a17ae7dadd3f8a77bfa3647ff405431a6cfee5df",
+      "upstream_candidate_sha256": "02a02dda8b29a06702c15567a17ae7dadd3f8a77bfa3647ff405431a6cfee5df",
+      "origin": "Supplemental local test/documentation; not claimed deployed",
+      "sanitized": false
+    },
+    {
+      "path": "package-lock.json",
+      "sha256": "24ef5b6840263d5c722ab0a7f6a12132e069b637204fa0c43a8dfd4180f3de5c",
+      "upstream_candidate_sha256": "24ef5b6840263d5c722ab0a7f6a12132e069b637204fa0c43a8dfd4180f3de5c",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "package.json",
+      "sha256": "34b0d3ad5cfe4671ddb562fd200806692fc1cd2bd0a89ae434b6f8939909c591",
+      "upstream_candidate_sha256": "34b0d3ad5cfe4671ddb562fd200806692fc1cd2bd0a89ae434b6f8939909c591",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/app.js",
+      "sha256": "b17f7fd84c0ed1973525816a93b1b7e7f6d6e02e5ece7a7f8b7a693592dc30d1",
+      "upstream_candidate_sha256": "b17f7fd84c0ed1973525816a93b1b7e7f6d6e02e5ece7a7f8b7a693592dc30d1",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/apple-touch-icon.png",
+      "sha256": "5ada1591e58ce411533e0193212ff61d29d15ddda10d42208f0642f9711f7b12",
+      "upstream_candidate_sha256": "5ada1591e58ce411533e0193212ff61d29d15ddda10d42208f0642f9711f7b12",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/call-audio-worklet.js",
+      "sha256": "8e2e8d27fcf6eb3350639e43e6b8f7dfe04ab4e6b45832b3b3ba430b723689f7",
+      "upstream_candidate_sha256": "8e2e8d27fcf6eb3350639e43e6b8f7dfe04ab4e6b45832b3b3ba430b723689f7",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/execution-view.html",
+      "sha256": "af7a65e6aca8adb8cd02460b144445c7a0cb274b564894e04db4a585e0614388",
+      "upstream_candidate_sha256": "af7a65e6aca8adb8cd02460b144445c7a0cb274b564894e04db4a585e0614388",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/execution-view.js",
+      "sha256": "565c5542d558978f7d785c2cb91b33a09e5aa2f5e044ed1024afce0a90a0562b",
+      "upstream_candidate_sha256": "565c5542d558978f7d785c2cb91b33a09e5aa2f5e044ed1024afce0a90a0562b",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/favicon-32.png",
+      "sha256": "b014f8d420f9e1caeb2b8a80e0057115c1258860ebc8cfafdb505ebc8f6cfe4e",
+      "upstream_candidate_sha256": "b014f8d420f9e1caeb2b8a80e0057115c1258860ebc8cfafdb505ebc8f6cfe4e",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/favicon-512.png",
+      "sha256": "5ada1591e58ce411533e0193212ff61d29d15ddda10d42208f0642f9711f7b12",
+      "upstream_candidate_sha256": "5ada1591e58ce411533e0193212ff61d29d15ddda10d42208f0642f9711f7b12",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/favicon-64.png",
+      "sha256": "538fa29e1a94b160225ca8288e7a37edf134bb2431dfd45b02162c0beffcaaf2",
+      "upstream_candidate_sha256": "538fa29e1a94b160225ca8288e7a37edf134bb2431dfd45b02162c0beffcaaf2",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/favicon.svg",
+      "sha256": "2b774a8ffe1b0e58ea1fed94768b2f5f88cffe6f920ca25d3ce625d3e4b4479b",
+      "upstream_candidate_sha256": "2b774a8ffe1b0e58ea1fed94768b2f5f88cffe6f920ca25d3ce625d3e4b4479b",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/index.html",
+      "sha256": "5179a2074d8e419cc01e3571c5c5c30110d0b0984beae923400061d0c4001637",
+      "upstream_candidate_sha256": "5179a2074d8e419cc01e3571c5c5c30110d0b0984beae923400061d0c4001637",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/rbac-redesign.css",
+      "sha256": "671b7df7fc0603ceb820b6f107868c72f2167ea6f519c17ef2a32512cf77d230",
+      "upstream_candidate_sha256": "671b7df7fc0603ceb820b6f107868c72f2167ea6f519c17ef2a32512cf77d230",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/rbac-redesign.js",
+      "sha256": "2131ba5993781a3a7dc666bef31520cd179ab073b2908f05074811f64d2c9dd3",
+      "upstream_candidate_sha256": "2131ba5993781a3a7dc666bef31520cd179ab073b2908f05074811f64d2c9dd3",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/site.webmanifest",
+      "sha256": "c6aeaf59d216fea495030317a18da965b349d9fe4a41dd2329989dcd92cc57d9",
+      "upstream_candidate_sha256": "c6aeaf59d216fea495030317a18da965b349d9fe4a41dd2329989dcd92cc57d9",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/styles.css",
+      "sha256": "ef685a15fb63d7f97434d3518f66344eedcd2f42d333222c5d6e9447e9e6a215",
+      "upstream_candidate_sha256": "ef685a15fb63d7f97434d3518f66344eedcd2f42d333222c5d6e9447e9e6a215",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/theme-dark.css",
+      "sha256": "88577d9d7df982637d068c252af33fbcb248449d2a9f3ea5dd3cad86fb88cdfa",
+      "upstream_candidate_sha256": "88577d9d7df982637d068c252af33fbcb248449d2a9f3ea5dd3cad86fb88cdfa",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/voice-call-audio.js",
+      "sha256": "2b67ac655d1a53a9a651ea51379963c6f62f8a17f68db8441e12f11aabd7bc3d",
+      "upstream_candidate_sha256": "2b67ac655d1a53a9a651ea51379963c6f62f8a17f68db8441e12f11aabd7bc3d",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/voice-call-ui.js",
+      "sha256": "871833a07d1c7d1942222932b71d28dd149e50f6a76a18142f8ff51b14dadf5a",
+      "upstream_candidate_sha256": "871833a07d1c7d1942222932b71d28dd149e50f6a76a18142f8ff51b14dadf5a",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/voice-calls.css",
+      "sha256": "e88c807106024fe43b78c3ea12c88dbd7b4a01f744a4fec7c0261bc5c672f82a",
+      "upstream_candidate_sha256": "e88c807106024fe43b78c3ea12c88dbd7b4a01f744a4fec7c0261bc5c672f82a",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/workspace-ui.js",
+      "sha256": "d1c0b833013ae3c80dfa1222e7a40bae50341e57b42e10d4cbe3bbd3e5b1eba5",
+      "upstream_candidate_sha256": "d1c0b833013ae3c80dfa1222e7a40bae50341e57b42e10d4cbe3bbd3e5b1eba5",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/zalo-tools.js",
+      "sha256": "c4f367595ccbbbbc2d7111f64597bb20a7b7bfc9aedc39cb11b5f98b2573ad81",
+      "upstream_candidate_sha256": "c4f367595ccbbbbc2d7111f64597bb20a7b7bfc9aedc39cb11b5f98b2573ad81",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "public/zalo-workspace.css",
+      "sha256": "44ae11b87d735fa697aa0fab69a94804c0ce5e7653145a9868cbb329ad2fd5ab",
+      "upstream_candidate_sha256": "44ae11b87d735fa697aa0fab69a94804c0ce5e7653145a9868cbb329ad2fd5ab",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/audit-account-isolation.mjs",
+      "sha256": "d527fec9bc7399e0e23dccd898a85175b0b77ef14d0bfffde708ffc021e7cdff",
+      "upstream_candidate_sha256": "d527fec9bc7399e0e23dccd898a85175b0b77ef14d0bfffde708ffc021e7cdff",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/audit-portal-rbac.mjs",
+      "sha256": "f6a9dd1a2ab97a25b138e40fe9f923f938ffc78156cb7996c8b2bd162d613449",
+      "upstream_candidate_sha256": "f6a9dd1a2ab97a25b138e40fe9f923f938ffc78156cb7996c8b2bd162d613449",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/backup.sh",
+      "sha256": "57a23d3506f8306a32efd04380d61c657e7456a13b7c6e7b8e9180c90cbe83e7",
+      "upstream_candidate_sha256": "57a23d3506f8306a32efd04380d61c657e7456a13b7c6e7b8e9180c90cbe83e7",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/quarantine-account-overlap.mjs",
+      "sha256": "eafc4ab7a77bfd3ff85c2cecb89a18cdd250eb7b0f0ffad908f5f78d5bda5815",
+      "upstream_candidate_sha256": "eafc4ab7a77bfd3ff85c2cecb89a18cdd250eb7b0f0ffad908f5f78d5bda5815",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/restore.sh",
+      "sha256": "9fb39beb9915b72cbb094327688250e5d29383d3bbb0c5f4b7f77c77ce163556",
+      "upstream_candidate_sha256": "9fb39beb9915b72cbb094327688250e5d29383d3bbb0c5f4b7f77c77ce163556",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/smoke-ai-automation-e2e.mjs",
+      "sha256": "ee4a6d1dba0da0eb9af00a5f80f282fd0764d099d418e1af4c7cef09086f2e5d",
+      "upstream_candidate_sha256": "ee4a6d1dba0da0eb9af00a5f80f282fd0764d099d418e1af4c7cef09086f2e5d",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/smoke-ai-automation-live.mjs",
+      "sha256": "c260564899bcc9ff2b2e1310054a3b24d31f37c8379cca4cc0ea50c94e5d103a",
+      "upstream_candidate_sha256": "c260564899bcc9ff2b2e1310054a3b24d31f37c8379cca4cc0ea50c94e5d103a",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/smoke-ai-automation-pricing-rules.mjs",
+      "sha256": "b73bb272b92f6c65a1ec1dbcd99215cf9e323f5de734c6d0781d52679a739ea0",
+      "upstream_candidate_sha256": "b73bb272b92f6c65a1ec1dbcd99215cf9e323f5de734c6d0781d52679a739ea0",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/smoke-ai-automation-runtime.mjs",
+      "sha256": "5783551aa9c897cdba693b8cb399baac900f0a3d71dfce05e816daac22705307",
+      "upstream_candidate_sha256": "5783551aa9c897cdba693b8cb399baac900f0a3d71dfce05e816daac22705307",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/smoke-portal-rbac.mjs",
+      "sha256": "ac32c1860b6bbb89703303e3a59d3987c40ec434f02968ca1dc212cf39f3216e",
+      "upstream_candidate_sha256": "ac32c1860b6bbb89703303e3a59d3987c40ec434f02968ca1dc212cf39f3216e",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "scripts/test-account-isolation.mjs",
+      "sha256": "431a071e84d525ae1427e0fe6cacc6b4cf38c680dc1ee6b889ed7001d5cc4bcb",
+      "upstream_candidate_sha256": "431a071e84d525ae1427e0fe6cacc6b4cf38c680dc1ee6b889ed7001d5cc4bcb",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/auth/cookies.js",
+      "sha256": "b0a67a5bda54328696b7c624cb4934b7ef63d8ef9705194a266b3dd09fe23118",
+      "upstream_candidate_sha256": "b0a67a5bda54328696b7c624cb4934b7ef63d8ef9705194a266b3dd09fe23118",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/auth/jwt.js",
+      "sha256": "66c74d11d8db641df2d47777c1a62d7cf1b7fa1d11d8121575ea64eceaba60a7",
+      "upstream_candidate_sha256": "66c74d11d8db641df2d47777c1a62d7cf1b7fa1d11d8121575ea64eceaba60a7",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/auth/session.js",
+      "sha256": "50421051395ffcf6f1f629edb1109677047477810bd927966f31f721540937ee",
+      "upstream_candidate_sha256": "50421051395ffcf6f1f629edb1109677047477810bd927966f31f721540937ee",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/config/portal.js",
+      "sha256": "02f05aa0ffe02c4b07341bd72804a80278f4a9673af6414522feedbb30a7d8e5",
+      "upstream_candidate_sha256": "02f05aa0ffe02c4b07341bd72804a80278f4a9673af6414522feedbb30a7d8e5",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/db/client.js",
+      "sha256": "c957a50365c1fbcc38f6bde204402b1d72abaf05871b6d15045a63d956781cb7",
+      "upstream_candidate_sha256": "c957a50365c1fbcc38f6bde204402b1d72abaf05871b6d15045a63d956781cb7",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/db/migrate.js",
+      "sha256": "31d2b71a93bc9fc8d3d70bfb72f52cd072d12042cfaa8cba5ece46b0796ecc96",
+      "upstream_candidate_sha256": "31d2b71a93bc9fc8d3d70bfb72f52cd072d12042cfaa8cba5ece46b0796ecc96",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/db/migrations/0001_portal_omnichannel.sql",
+      "sha256": "d616c7dd9b4501ca7c1bfe1bf828bbc6d819cfd5c3d58e12907577b92e6d4338",
+      "upstream_candidate_sha256": "d616c7dd9b4501ca7c1bfe1bf828bbc6d819cfd5c3d58e12907577b92e6d4338",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/db/migrations/0002_portal_event_journal.sql",
+      "sha256": "f08d7e1b8e2f4db6e0004f5799a42fe49015bf0b527ed3f37259b48ccfbdcebe",
+      "upstream_candidate_sha256": "f08d7e1b8e2f4db6e0004f5799a42fe49015bf0b527ed3f37259b48ccfbdcebe",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/db/migrations/0003_thread_binding_routing_diagnostics.sql",
+      "sha256": "c26f214fc72f52d5542a8dd9a62866001b92fc46b86106b55338809569451024",
+      "upstream_candidate_sha256": "c26f214fc72f52d5542a8dd9a62866001b92fc46b86106b55338809569451024",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/lib/compat-multipart.js",
+      "sha256": "1004e8a5a00d9bd7a3cee862fd35d861c4ed413d204ad40ddc5faee87ca5c31d",
+      "upstream_candidate_sha256": "1004e8a5a00d9bd7a3cee862fd35d861c4ed413d204ad40ddc5faee87ca5c31d",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/lib/portal-store.js",
+      "sha256": "6d5c82d4f9d351a7704924ac4a1fa3ae963f3adac3fe96f931d576785feece73",
+      "upstream_candidate_sha256": "6d5c82d4f9d351a7704924ac4a1fa3ae963f3adac3fe96f931d576785feece73",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/lib/store.js",
+      "sha256": "be013ab62b01461217ae3ab71af8f9ae4b79f80df9b3b5683548a0b7910fc585",
+      "upstream_candidate_sha256": "be013ab62b01461217ae3ab71af8f9ae4b79f80df9b3b5683548a0b7910fc585",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/middleware/authorize.js",
+      "sha256": "59a95278666bb86418a05c96c4a0fb9ee8faff9cbea3ab346b5e20d63e9d42c0",
+      "upstream_candidate_sha256": "59a95278666bb86418a05c96c4a0fb9ee8faff9cbea3ab346b5e20d63e9d42c0",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/middleware/scope.js",
+      "sha256": "6ad7220db8d9d6852ec4d82b6767fe3cb6445ff6304ee08dd0be5975b94d5079",
+      "upstream_candidate_sha256": "6ad7220db8d9d6852ec4d82b6767fe3cb6445ff6304ee08dd0be5975b94d5079",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/providers/mock-provider.js",
+      "sha256": "851ae7e7a458a1a541e8f4fd731f08bb289c8b71289f5a12117719dfaeae0ad6",
+      "upstream_candidate_sha256": "851ae7e7a458a1a541e8f4fd731f08bb289c8b71289f5a12117719dfaeae0ad6",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/providers/zalo-web-provider.js",
+      "sha256": "de217be37375877bcad00143fafe23e75bd64a61d3d5e4ed4172237860311163",
+      "upstream_candidate_sha256": "de217be37375877bcad00143fafe23e75bd64a61d3d5e4ed4172237860311163",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/repositories/conversations.js",
+      "sha256": "12298ef9ceae097d694e98e160b0e30f3bee21cebd0e5272398903ccf400731b",
+      "upstream_candidate_sha256": "12298ef9ceae097d694e98e160b0e30f3bee21cebd0e5272398903ccf400731b",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/repositories/users.js",
+      "sha256": "99bdcbd308151b6771d2b78e8c6612103b3e5430c991ab32757b533f40ee610a",
+      "upstream_candidate_sha256": "99bdcbd308151b6771d2b78e8c6612103b3e5430c991ab32757b533f40ee610a",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/server.js",
+      "sha256": "67463bd167a3134f996b246fd1996d0d634291c691b1dbe83f8eb0ef8ff4ff1d",
+      "upstream_candidate_sha256": "22153593893c3ca6fd79de1ffbbc90af1a6ed5671dec5badde210d14280be9ee",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": true
+    },
+    {
+      "path": "src/services/access-service.js",
+      "sha256": "779cf9b65ef90505f98e25d483624df5ad6e8db2940dfab44fcd210abb26472e",
+      "upstream_candidate_sha256": "779cf9b65ef90505f98e25d483624df5ad6e8db2940dfab44fcd210abb26472e",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/account-isolation-diagnostics.js",
+      "sha256": "4729aabdb5464c5671fe6ad060188e672bb93a01fd531e23f0fb6ce73c3d44d8",
+      "upstream_candidate_sha256": "4729aabdb5464c5671fe6ad060188e672bb93a01fd531e23f0fb6ce73c3d44d8",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/agent-system-db.js",
+      "sha256": "5792272b8e981aefff882cdee6f175c49a09651d556d841a85bf1d70b59e96a9",
+      "upstream_candidate_sha256": "5792272b8e981aefff882cdee6f175c49a09651d556d841a85bf1d70b59e96a9",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/ai-automation-channel-adapter.js",
+      "sha256": "457b2e67286e984c56ddf497c0e7dca15f41ed359770f94e7386ac165cf020e5",
+      "upstream_candidate_sha256": "457b2e67286e984c56ddf497c0e7dca15f41ed359770f94e7386ac165cf020e5",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/ai-automation-contract.js",
+      "sha256": "c8c682009082f2f0135b4503e6764bee1e9cbe76cca8d65da6a72bc6f76bb92b",
+      "upstream_candidate_sha256": "c8c682009082f2f0135b4503e6764bee1e9cbe76cca8d65da6a72bc6f76bb92b",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/ai-automation-openrouter.js",
+      "sha256": "54ffc4111f0b73416eceb9bd4165ac4b0165f17fc3c95e1d4caa52291371da75",
+      "upstream_candidate_sha256": "54ffc4111f0b73416eceb9bd4165ac4b0165f17fc3c95e1d4caa52291371da75",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/ai-automation-runtime.js",
+      "sha256": "186ee094421ce859d64aa1251f3afd6d7e5afc87edea8399bb8fec87e5cc9908",
+      "upstream_candidate_sha256": "186ee094421ce859d64aa1251f3afd6d7e5afc87edea8399bb8fec87e5cc9908",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/ai-automation-service.js",
+      "sha256": "68563be81a873bf6b60d2271d1f5a90d0a44cea9afb8ae40d9c64e4c9bb11578",
+      "upstream_candidate_sha256": "68563be81a873bf6b60d2271d1f5a90d0a44cea9afb8ae40d9c64e4c9bb11578",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/ai-chat-switch.js",
+      "sha256": "9f8ccb98a57433b9c414f4b51ded335026c556ffc8bf61e1b74d9a87926cda42",
+      "upstream_candidate_sha256": "9f8ccb98a57433b9c414f4b51ded335026c556ffc8bf61e1b74d9a87926cda42",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/audit-service.js",
+      "sha256": "9d2065786f5ad63db144746833b16437245c6e6b5b791849a3bc5c46c328abe0",
+      "upstream_candidate_sha256": "9d2065786f5ad63db144746833b16437245c6e6b5b791849a3bc5c46c328abe0",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/chatbot-bridge-service.js",
+      "sha256": "f7154130751fb73f5e91e39e4f386323b96719a76bc7027d2660e0d988f82884",
+      "upstream_candidate_sha256": "f7154130751fb73f5e91e39e4f386323b96719a76bc7027d2660e0d988f82884",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/chihomehotel-client.js",
+      "sha256": "b63208194f28a08d9e188928d54255cbe86105ca3f8377f06622a7fcf0ab4d17",
+      "upstream_candidate_sha256": "b63208194f28a08d9e188928d54255cbe86105ca3f8377f06622a7fcf0ab4d17",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/portal-journal-service.js",
+      "sha256": "df733a298b08648f1a3467f734bff1479d9a500e43d5cb8d4ae29d6a21f2b7fc",
+      "upstream_candidate_sha256": "df733a298b08648f1a3467f734bff1479d9a500e43d5cb8d4ae29d6a21f2b7fc",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/portal-read-service.js",
+      "sha256": "3910ce73c9d1d1edc7efcfef1fc172030a5d7ed28c2b9b3a00edfe1f227c579d",
+      "upstream_candidate_sha256": "3910ce73c9d1d1edc7efcfef1fc172030a5d7ed28c2b9b3a00edfe1f227c579d",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/portal-sync-service.js",
+      "sha256": "77d88b10630cc271f163a91ce28c98a124ed42b846314c5d6a9e98e8877a1a20",
+      "upstream_candidate_sha256": "77d88b10630cc271f163a91ce28c98a124ed42b846314c5d6a9e98e8877a1a20",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/presence-service.js",
+      "sha256": "abe200c415535f7078b18b7b70b78b9f452919b44db2fbc7257ec374b3403c10",
+      "upstream_candidate_sha256": "abe200c415535f7078b18b7b70b78b9f452919b44db2fbc7257ec374b3403c10",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/qr-login-session.js",
+      "sha256": "a5fd4bcc821fc4cfd482eabbbc800201379dd0e18e68248fa4c0f2bddd20be5b",
+      "upstream_candidate_sha256": "a5fd4bcc821fc4cfd482eabbbc800201379dd0e18e68248fa4c0f2bddd20be5b",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/request-account-context.js",
+      "sha256": "469665d7a139e5964cb0b8e9296b2949ff249e2b3d7deba44ef8693dbe4220b9",
+      "upstream_candidate_sha256": "469665d7a139e5964cb0b8e9296b2949ff249e2b3d7deba44ef8693dbe4220b9",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/request-account-selection.js",
+      "sha256": "76a79680f57fbfcb4f4259c22d767d35dcaf6a2cef65a9d4295df28fb0d41cb2",
+      "upstream_candidate_sha256": "76a79680f57fbfcb4f4259c22d767d35dcaf6a2cef65a9d4295df28fb0d41cb2",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/routing-service.js",
+      "sha256": "b668bcaf725035e997aa2711489b4a3b00e34b4458fb019d930d83f7711a86c8",
+      "upstream_candidate_sha256": "b668bcaf725035e997aa2711489b4a3b00e34b4458fb019d930d83f7711a86c8",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/telegram-alert-service.js",
+      "sha256": "5549128e4842cac9db6c48b10ed6d1a4c331db99f8a506b83b36caac605ae375",
+      "upstream_candidate_sha256": "5549128e4842cac9db6c48b10ed6d1a4c331db99f8a506b83b36caac605ae375",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/voice-call-access.js",
+      "sha256": "7da8e7c5e6fd752662973d88e11f08c0244b03ff6fc4cb84450932ab60bb0220",
+      "upstream_candidate_sha256": "7da8e7c5e6fd752662973d88e11f08c0244b03ff6fc4cb84450932ab60bb0220",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/voice-call-diagnostics.js",
+      "sha256": "dbaeff1bd73e3450e1758c9070d7db9e5eb44ca3da9d4fd1d1a6a4a38e5760fc",
+      "upstream_candidate_sha256": "dbaeff1bd73e3450e1758c9070d7db9e5eb44ca3da9d4fd1d1a6a4a38e5760fc",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/voice-call-gateway.js",
+      "sha256": "94501a3ba7cbf079f6bd1b476fd2c0194a580b4c5a0e8684921302e493301a8e",
+      "upstream_candidate_sha256": "94501a3ba7cbf079f6bd1b476fd2c0194a580b4c5a0e8684921302e493301a8e",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/voice-call-media.js",
+      "sha256": "76da68e4afa9d673a3499f42ed190184c62c5b24862c4b3c8d3775104baa4628",
+      "upstream_candidate_sha256": "76da68e4afa9d673a3499f42ed190184c62c5b24862c4b3c8d3775104baa4628",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/zalo-latest-features.js",
+      "sha256": "62ec95c12d7956058660c63c771c35ba97b97b557a3f42f79a47d96132454ccb",
+      "upstream_candidate_sha256": "62ec95c12d7956058660c63c771c35ba97b97b557a3f42f79a47d96132454ccb",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "src/services/zalo-voice-calls.js",
+      "sha256": "704b46f0fe1835344028135e11be49a39877d9569efdeeaa483aef0f7313f31b",
+      "upstream_candidate_sha256": "704b46f0fe1835344028135e11be49a39877d9569efdeeaa483aef0f7313f31b",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "test/account-recovery.test.mjs",
+      "sha256": "0410698d587137d3cb67d7fb61c89bbda968f7fa9da455133220783658737ccc",
+      "upstream_candidate_sha256": "0410698d587137d3cb67d7fb61c89bbda968f7fa9da455133220783658737ccc",
+      "origin": "Existing GitHub main 4da31d72; supplemental file absent from VPS snapshot",
+      "sanitized": false
+    },
+    {
+      "path": "test/chatbot-bridge.test.mjs",
+      "sha256": "26e828ba7d5c8ddad2207e772a386f259ffb46bce6e47de6b846f83acaf450c9",
+      "upstream_candidate_sha256": "26e828ba7d5c8ddad2207e772a386f259ffb46bce6e47de6b846f83acaf450c9",
+      "origin": "Existing GitHub main 4da31d72; supplemental file absent from VPS snapshot",
+      "sanitized": false
+    },
+    {
+      "path": "test/compat-multipart.test.mjs",
+      "sha256": "abf60b0e4b50f38f26b8256fb9f3440312a808e8122805cbeb8e6ae2da23c9d6",
+      "upstream_candidate_sha256": "abf60b0e4b50f38f26b8256fb9f3440312a808e8122805cbeb8e6ae2da23c9d6",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "test/fixtures/compat-provider-spy.mjs",
+      "sha256": "b2ff6a98bcb4350d3db158977ede02d595dda3951bd9d096dba4527e4c7e5d67",
+      "upstream_candidate_sha256": "b2ff6a98bcb4350d3db158977ede02d595dda3951bd9d096dba4527e4c7e5d67",
+      "origin": "VPS host; runtime parity where container_sha256 is present",
+      "sanitized": false
+    },
+    {
+      "path": "test/new-account-isolation.test.mjs",
+      "sha256": "a0adfa44aaefac4b09c994949980f69213591e0f4ea0b2d0326b5a369f6c99d5",
+      "upstream_candidate_sha256": "a0adfa44aaefac4b09c994949980f69213591e0f4ea0b2d0326b5a369f6c99d5",
+      "origin": "Existing GitHub main 4da31d72; supplemental file absent from VPS snapshot",
+      "sanitized": false
+    },
+    {
+      "path": "test/qr-login-session.test.mjs",
+      "sha256": "61dbac05c05ff62c163f6fc0287b1ef17e39ac01f2c451e1c4f5fe7f75183992",
+      "upstream_candidate_sha256": "61dbac05c05ff62c163f6fc0287b1ef17e39ac01f2c451e1c4f5fe7f75183992",
+      "origin": "Supplemental local test/documentation; not claimed deployed",
+      "sanitized": false
+    },
+    {
+      "path": "test/voice-call-media.test.mjs",
+      "sha256": "e470dca552cb788fe8b328448b3bd2b10d3eea32724b1625654db6cb80377972",
+      "upstream_candidate_sha256": "e470dca552cb788fe8b328448b3bd2b10d3eea32724b1625654db6cb80377972",
+      "origin": "Supplemental local test/documentation; not claimed deployed",
+      "sanitized": false
+    },
+    {
+      "path": "test/voice-calls.test.mjs",
+      "sha256": "d6f043d32e9ce27ebb0195a04f771db22ee0db5bbf413f6e327a32e9cefad301",
+      "upstream_candidate_sha256": "d6f043d32e9ce27ebb0195a04f771db22ee0db5bbf413f6e327a32e9cefad301",
+      "origin": "Supplemental local test/documentation; not claimed deployed",
+      "sanitized": false
+    },
+    {
+      "path": "test/zalo-latest-features.test.mjs",
+      "sha256": "41431b74a2c9834be349642df9ee17153791c7b4e5e74a78796d5281959d979e",
+      "upstream_candidate_sha256": "41431b74a2c9834be349642df9ee17153791c7b4e5e74a78796d5281959d979e",
+      "origin": "Supplemental local test/documentation; not claimed deployed",
+      "sanitized": false
+    }
+  ],
+  "additional_files": [
+    "test/chihome-lookup-auth.test.mjs",
+    "docs/API-WEBHOOK-CONTRACT.md",
+    "docs/api-inventory.json",
+    "docs/source-provenance.json",
+    "docs/SOURCE-SNAPSHOT.md"
+  ],
+  "manifest_scope": "Hashes cover 106 original candidate paths. Additional authored files listed separately to avoid self-reference."
+}

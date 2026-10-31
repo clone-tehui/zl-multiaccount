@@ -1,0 +1,35 @@
+{
+  "name": "zalo-user-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Private self-hosted Zalo user server scaffold for multi-operator inbox",
+  "type": "module",
+  "scripts": {
+    "test:compat-multipart": "node --test test/compat-multipart.test.mjs",
+    "test:account-isolation": "node scripts/test-account-isolation.mjs",
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node src/db/migrate.js",
+    "check": "node --check src/server.js && node --check src/lib/store.js && node --check src/lib/portal-store.js && node --check src/providers/mock-provider.js && node --check src/providers/zalo-web-provider.js && node --check src/auth/cookies.js && node --check src/auth/jwt.js && node --check src/auth/session.js && node --check src/middleware/authorize.js && node --check src/middleware/scope.js && node --check src/config/portal.js && node --check src/db/client.js && node --check src/db/migrate.js && node --check src/repositories/users.js && node --check src/repositories/conversations.js && node --check src/services/routing-service.js && node --check src/services/presence-service.js && node --check src/services/audit-service.js && node --check src/services/access-service.js && node --check src/services/portal-sync-service.js && node --check src/services/portal-journal-service.js && node --check src/services/portal-read-service.js && node --check src/services/ai-automation-service.js && node --check src/services/agent-system-db.js && node --check src/services/ai-automation-contract.js && node --check src/services/ai-automation-channel-adapter.js && node --check src/services/ai-automation-runtime.js && node --check src/services/ai-automation-openrouter.js && node --check src/services/chatbot-bridge-service.js && node --check scripts/audit-account-isolation.mjs && node --check scripts/audit-portal-rbac.mjs && node --check scripts/smoke-portal-rbac.mjs && node --check scripts/smoke-ai-automation-runtime.mjs && node --check scripts/smoke-ai-automation-live.mjs && node --check scripts/smoke-ai-automation-e2e.mjs && node --check scripts/smoke-ai-automation-pricing-rules.mjs",
+    "audit:accounts": "node scripts/audit-account-isolation.mjs",
+    "audit:portal": "node scripts/audit-portal-rbac.mjs",
+    "smoke:portal-rbac": "node scripts/smoke-portal-rbac.mjs",
+    "smoke:ai-automation": "node scripts/smoke-ai-automation-runtime.mjs",
+    "smoke:ai-automation:live": "node scripts/smoke-ai-automation-live.mjs",
+    "smoke:ai-automation:e2e": "node scripts/smoke-ai-automation-e2e.mjs",
+    "smoke:ai-automation:pricing-rules": "node scripts/smoke-ai-automation-pricing-rules.mjs",
+    "test:chatbot-bridge": "node --test test/chatbot-bridge.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@fastify/busboy": "3.2.2",
+    "@softtynet/zca-js": "2.3.12",
+    "better-sqlite3": "^11.10.0",
+    "pg": "^8.20.0",
+    "ws": "8.21.0",
+    "xlsx": "^0.18.5",
+    "zca-js": "2.2.0"
+  }
+}

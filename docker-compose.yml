@@ -1,0 +1,20 @@
+services:
+  zalo-user-server:
+    build: .
+    container_name: zalo-user-server
+    env_file:
+      - .env
+    ports:
+      - "4310:4310"
+    environment:
+      DATA_DIR: /data
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    networks:
+      - caddy_shared
+
+networks:
+  caddy_shared:
+    external: true
+    name: chihome_hotel_app_network

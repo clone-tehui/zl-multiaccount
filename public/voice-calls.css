@@ -1,0 +1,21 @@
+.voice-call-panel {
+  position: fixed;
+  inset: auto 20px 20px auto;
+  z-index: 1200;
+  width: min(380px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid currentColor;
+  border-radius: 12px;
+  background: var(--panel, #191b24);
+  color: var(--text, #f4f5fa);
+}
+.voice-call-panel[hidden] { display: none; }
+#btn-cancel-qr[hidden] { display: none; }
+.voice-call-panel h2 { margin: 0 0 8px; font-size: 18px; }
+.voice-call-panel p { margin: 0 0 20px; line-height: 1.5; }
+.voice-call-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.voice-call-actions button { min-height: 44px; }
+.voice-call-actions [hidden] { display: none; }
+#btn-call-end { background: #a51e36; color: #fff; }
+.voice-call-panel button:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+@media (max-width: 600px) { .voice-call-panel { inset: auto 16px 16px; } }

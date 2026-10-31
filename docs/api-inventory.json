@@ -1,0 +1,567 @@
+{
+  "literal_routes": [
+    {
+      "method": "GET",
+      "path": "/api/auth/status",
+      "source": "src/server.js",
+      "line": 122
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "source": "src/server.js",
+      "line": 136
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/setup",
+      "source": "src/server.js",
+      "line": 170
+    },
+    {
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "source": "src/server.js",
+      "line": 192
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "source": "src/server.js",
+      "line": 200
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/ai-chat",
+      "source": "src/server.js",
+      "line": 204
+    },
+    {
+      "method": "GET",
+      "path": "/api/version",
+      "source": "src/server.js",
+      "line": 223
+    },
+    {
+      "method": "POST",
+      "path": "/api/chatbot/send",
+      "source": "src/server.js",
+      "line": 227
+    },
+    {
+      "method": "GET",
+      "path": "/api/agents",
+      "source": "src/server.js",
+      "line": 251
+    },
+    {
+      "method": "GET",
+      "path": "/api/chihomehotel/booking-bridge",
+      "source": "src/server.js",
+      "line": 275
+    },
+    {
+      "method": "GET",
+      "path": "/api/docs/compat",
+      "source": "src/server.js",
+      "line": 309
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/me",
+      "source": "src/server.js",
+      "line": 323
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/apps",
+      "source": "src/server.js",
+      "line": 328
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/catalog",
+      "source": "src/server.js",
+      "line": 334
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/settings",
+      "source": "src/server.js",
+      "line": 340
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/db/status",
+      "source": "src/server.js",
+      "line": 346
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/settings",
+      "source": "src/server.js",
+      "line": 359
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/roles",
+      "source": "src/server.js",
+      "line": 379
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/roles",
+      "source": "src/server.js",
+      "line": 389
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/ops/overview",
+      "source": "src/server.js",
+      "line": 416
+    },
+    {
+      "method": "GET",
+      "path": "/api/portal/activity",
+      "source": "src/server.js",
+      "line": 422
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/departments",
+      "source": "src/server.js",
+      "line": 428
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/users",
+      "source": "src/server.js",
+      "line": 469
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/channels",
+      "source": "src/server.js",
+      "line": 571
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/threads/bind",
+      "source": "src/server.js",
+      "line": 609
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/conversations/assign",
+      "source": "src/server.js",
+      "line": 658
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/presence",
+      "source": "src/server.js",
+      "line": 707
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/routing/plan",
+      "source": "src/server.js",
+      "line": 731
+    },
+    {
+      "method": "POST",
+      "path": "/api/portal/sso/mock-login",
+      "source": "src/server.js",
+      "line": 773
+    },
+    {
+      "method": "GET",
+      "path": "/api/accounts",
+      "source": "src/server.js",
+      "line": 809
+    },
+    {
+      "method": "POST",
+      "path": "/api/compat/manager",
+      "source": "src/server.js",
+      "line": 817
+    },
+    {
+      "method": "GET",
+      "path": "/api/chihome/resolve-thread",
+      "source": "src/server.js",
+      "line": 818
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/account-isolation/diagnostics",
+      "source": "src/server.js",
+      "line": 824
+    },
+    {
+      "method": "POST",
+      "path": "/api/accounts/select",
+      "source": "src/server.js",
+      "line": 830
+    },
+    {
+      "method": "POST",
+      "path": "/api/accounts/logout",
+      "source": "src/server.js",
+      "line": 840
+    },
+    {
+      "method": "POST",
+      "path": "/api/integration/config",
+      "source": "src/server.js",
+      "line": 847
+    },
+    {
+      "method": "GET",
+      "path": "/api/ai-automation/config",
+      "source": "src/server.js",
+      "line": 854
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai-automation/config",
+      "source": "src/server.js",
+      "line": 866
+    },
+    {
+      "method": "GET",
+      "path": "/api/ai-automation/knowledge",
+      "source": "src/server.js",
+      "line": 883
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai-automation/knowledge/upload",
+      "source": "src/server.js",
+      "line": 894
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai-automation/knowledge/delete",
+      "source": "src/server.js",
+      "line": 921
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai-automation/plan-preview",
+      "source": "src/server.js",
+      "line": 950
+    },
+    {
+      "method": "POST",
+      "path": "/api/ai-automation/simulate",
+      "source": "src/server.js",
+      "line": 981
+    },
+    {
+      "method": "GET",
+      "path": "/api/threads/automation",
+      "source": "src/server.js",
+      "line": 1022
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/automation",
+      "source": "src/server.js",
+      "line": 1042
+    },
+    {
+      "method": "GET",
+      "path": "/api/threads/memory",
+      "source": "src/server.js",
+      "line": 1105
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/memory/delete",
+      "source": "src/server.js",
+      "line": 1128
+    },
+    {
+      "method": "GET",
+      "path": "/api/stickers/packs",
+      "source": "src/server.js",
+      "line": 1178
+    },
+    {
+      "method": "GET",
+      "path": "/api/stickers/pack",
+      "source": "src/server.js",
+      "line": 1182
+    },
+    {
+      "method": "GET",
+      "path": "/api/friends/search",
+      "source": "src/server.js",
+      "line": 1192
+    },
+    {
+      "method": "GET",
+      "path": "/api/chihome/resolve-thread",
+      "source": "src/server.js",
+      "line": 1201
+    },
+    {
+      "method": "POST",
+      "path": "/api/friends/request",
+      "source": "src/server.js",
+      "line": 1223
+    },
+    {
+      "method": "GET",
+      "path": "/api/friends/status",
+      "source": "src/server.js",
+      "line": 1234
+    },
+    {
+      "method": "POST",
+      "path": "/api/friends/request/accept",
+      "source": "src/server.js",
+      "line": 1244
+    },
+    {
+      "method": "POST",
+      "path": "/api/friends/request/reject",
+      "source": "src/server.js",
+      "line": 1255
+    },
+    {
+      "method": "GET",
+      "path": "/api/friends",
+      "source": "src/server.js",
+      "line": 1266
+    },
+    {
+      "method": "GET",
+      "path": "/api/threads/profile",
+      "source": "src/server.js",
+      "line": 1275
+    },
+    {
+      "method": "POST",
+      "path": "/api/groups/leave",
+      "source": "src/server.js",
+      "line": 1288
+    },
+    {
+      "method": "POST",
+      "path": "/api/groups/link",
+      "source": "src/server.js",
+      "line": 1299
+    },
+    {
+      "method": "POST",
+      "path": "/api/groups/invite",
+      "source": "src/server.js",
+      "line": 1310
+    },
+    {
+      "method": "POST",
+      "path": "/api/friends/request/undo",
+      "source": "src/server.js",
+      "line": 1321
+    },
+    {
+      "method": "POST",
+      "path": "/api/friends/remove",
+      "source": "src/server.js",
+      "line": 1332
+    },
+    {
+      "method": "POST",
+      "path": "/api/friends/block",
+      "source": "src/server.js",
+      "line": 1343
+    },
+    {
+      "method": "POST",
+      "path": "/api/friends/unblock",
+      "source": "src/server.js",
+      "line": 1354
+    },
+    {
+      "method": "GET",
+      "path": "/api/state",
+      "source": "src/server.js",
+      "line": 1365
+    },
+    {
+      "method": "GET",
+      "path": "/api/events",
+      "source": "src/server.js",
+      "line": 1376
+    },
+    {
+      "method": "GET",
+      "path": "/api/zalo/features",
+      "source": "src/server.js",
+      "line": 1380
+    },
+    {
+      "method": "POST",
+      "path": "/api/zalo/features/run",
+      "source": "src/server.js",
+      "line": 1387
+    },
+    {
+      "method": "GET",
+      "path": "/api/calls/capabilities",
+      "source": "src/server.js",
+      "line": 1400
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/qr/start",
+      "source": "src/server.js",
+      "line": 1415
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/qr/confirm",
+      "source": "src/server.js",
+      "line": 1461
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/send",
+      "source": "src/server.js",
+      "line": 1474
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/sticker",
+      "source": "src/server.js",
+      "line": 1501
+    },
+    {
+      "method": "POST",
+      "path": "/api/compat/manager",
+      "source": "src/server.js",
+      "line": 1513
+    },
+    {
+      "method": "POST",
+      "path": "/get/post",
+      "source": "src/server.js",
+      "line": 1513
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/undo",
+      "source": "src/server.js",
+      "line": 1528
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/delete",
+      "source": "src/server.js",
+      "line": 1541
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages/react",
+      "source": "src/server.js",
+      "line": 1554
+    },
+    {
+      "method": "GET",
+      "path": "/api/threads/messages",
+      "source": "src/server.js",
+      "line": 1567
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/read",
+      "source": "src/server.js",
+      "line": 1579
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/unread",
+      "source": "src/server.js",
+      "line": 1591
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/pin",
+      "source": "src/server.js",
+      "line": 1604
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/archive",
+      "source": "src/server.js",
+      "line": 1616
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/hide",
+      "source": "src/server.js",
+      "line": 1628
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/mute",
+      "source": "src/server.js",
+      "line": 1640
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/delete",
+      "source": "src/server.js",
+      "line": 1652
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/auto-delete",
+      "source": "src/server.js",
+      "line": 1664
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/meta",
+      "source": "src/server.js",
+      "line": 1676
+    },
+    {
+      "method": "POST",
+      "path": "/api/threads/rename",
+      "source": "src/server.js",
+      "line": 1699
+    },
+    {
+      "method": "POST",
+      "path": "/api/sync/bootstrap",
+      "source": "src/server.js",
+      "line": 1712
+    }
+  ],
+  "additional_dynamic_or_array_routes": [
+    {
+      "method": "GET",
+      "path": "/api/sessions/qr"
+    },
+    {
+      "method": "POST",
+      "path": "/api/sessions/qr/cancel"
+    },
+    {
+      "method": "GET (upgrade)",
+      "path": "/api/calls/media"
+    },
+    {
+      "method": "GET",
+      "path": "/api/agents/{id}"
+    },
+    {
+      "method": "GET",
+      "path": "/api/executions/{id}/trace"
+    }
+  ],
+  "limits": "Static route inventory only; full request/response/RBAC per-route contract and authenticated live acceptance remain incomplete. No mutating production call."
+}
